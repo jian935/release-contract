@@ -317,6 +317,47 @@ def run_checks() -> list[Check]:
         )
     )
 
+    # 16. The human annotation packet must stay answer-free and in sync.
+    import csv
+    import importlib.util
+    import io
+
+    packet_spec = importlib.util.spec_from_file_location(
+        "gen_blind_packet", ROOT / "scripts" / "gen_blind_packet.py"
+    )
+    packet = importlib.util.module_from_spec(packet_spec)
+    packet_spec.loader.exec_module(packet)
+    rebuilt_ws, rebuilt_tpl = packet.build()
+    ws_text = _read(ROOT / "eval" / "blind" / "worksheet.md")
+    tpl_text = _read(ROOT / "eval" / "blind" / "answer_sheet.template.csv")
+    guide_text = _read(ROOT / "eval" / "blind" / "ANNOTATOR_GUIDE.md")
+
+    filled_rows = [
+        r for r in csv.DictReader(io.StringIO(tpl_text))
+        if (r.get("verdict") or "").strip()
+    ]
+    filled_cells: list[str] = []
+    for line in ws_text.splitlines():
+        if not line.startswith("| ") or "your verdict" in line:
+            continue
+        parts = line.split("|")
+        if len(parts) >= 11 and parts[9].strip():
+            filled_cells.append(line[:60])
+    score_leaks = [
+        text
+        for text in (ws_text, tpl_text, guide_text)
+        if any(s in text for s in ("1.0000", "0.8928", "0.9011"))
+    ]
+    in_sync = ws_text == rebuilt_ws and tpl_text == rebuilt_tpl
+    checks.append(
+        _check(
+            "blind_packet_answer_free_and_in_sync",
+            in_sync and not filled_rows and not filled_cells and not score_leaks,
+            "in_sync=%s filled_rows=%d filled_cells=%d score_leaks=%d"
+            % (in_sync, len(filled_rows), len(filled_cells), len(score_leaks)),
+        )
+    )
+
     return checks
 
 

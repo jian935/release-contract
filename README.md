@@ -114,7 +114,9 @@ Two checks do not depend on author-written golden labels:
   violation is a bug, not a disagreeing label.
 - `python scripts/blind_eval.py` compares an independent annotator with the
   engine using answer-free prompts in `eval/blind/`. See
-  `eval/blind/README.md` for the protocol.
+  `eval/blind/README.md` for the protocol. Fill
+  `answer_sheet.template.csv` and pass the CSV path to the script; undecided
+  rows are skipped, never guessed.
 
 **No blind evaluation has been run.** There is no measured agreement score,
 and no number is claimed for it.

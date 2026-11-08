@@ -101,6 +101,7 @@ TRAFFIC (denominator = full traffic 1.0)
   违规就是真 bug，不是标注分歧。
 - `python scripts/blind_eval.py` 用 `eval/blind/` 里去掉答案的题面，
   把独立标注者与引擎判定对比。协议见 `eval/blind/README.md`。
+  填好 `answer_sheet.template.csv` 后把 CSV 路径传给脚本；未决行跳过，不猜。
 
 **没有跑过盲评**，没有实测一致率，也不宣称任何数字。
 

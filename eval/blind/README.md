@@ -63,3 +63,21 @@ annotation file it prints `NOT RUN` and invents no number.
 Agreement here is not a model accuracy figure. It is a measure of how often an
 independent reader agrees with deterministic gates, and its interval will be
 wide until enough cases are annotated.
+
+## Human-readable annotation packet
+
+Run `python scripts/gen_blind_packet.py` to regenerate these from the prompts:
+
+- `ANNOTATOR_GUIDE.md` — self-contained instructions; contains no results,
+  no answers and no accuracy figures.
+- `worksheet.md` — one table per case with empty verdict and reason columns.
+- `answer_sheet.template.csv` — one row per segment, empty verdict column.
+
+Copy the template to `answer_sheet.csv` (gitignored), fill it in, then score it
+with `python scripts/blind_eval.py eval/blind/answer_sheet.csv`. The script
+accepts CSV or JSONL, skips undecided rows and reports how many segments remain
+unannotated. Undecided rows are never guessed and never counted as agreement.
+
+Project self-checks assert that the packet stays in sync with the prompts,
+that every verdict cell stays empty in the shipped template, and that no
+accuracy figure leaks into any file an annotator sees.
