@@ -26,6 +26,8 @@ decision**. It answers three questions a PM actually has to sign off on:
 - Someone proposes "ship to 60% of traffic" and you need to know what the
   other 40% is.
 - A post-incident review asks which segment should have been fenced.
+- A new model version needs a segment-by-segment comparison against the
+  previous one (`diff`).
 
 ## When NOT to use
 
@@ -55,7 +57,13 @@ python -m release_contract.cli decide examples/demo_contract.json --json
 python -m release_contract.cli gates
 python -m release_contract.cli eval
 python -m release_contract.cli version
+python -m release_contract.cli diff examples/demo_contract.json examples/demo_contract_v2.json
+python scripts/property_scan.py
+python scripts/blind_eval.py
 ```
+
+`decide --fail-on FENCE,HOLD` returns a non-zero exit code when any segment
+hits a listed verdict, so a pipeline can gate on it.
 
 ## The 6 gates
 
@@ -81,7 +89,8 @@ get opposite verdicts purely because their interval widths differ.
 Per-segment verdicts, four traffic buckets that always sum to full traffic
 (`auto` / `fence` / `hold` / `uncovered`), advisory evidence-risk flags, and
 a concrete rollback trigger per `AUTO` segment. JSON output is stable-key and
-suitable for a CI golden diff.
+suitable for a CI golden diff. `diff` reports, per segment, whether a version
+change is a regression, an improvement, or unchanged, plus the traffic delta.
 
 Evidence-risk flags (`uncovered_traffic`, `threshold_hugging`,
 `no_failure_observed`, `uniform_sample_sizes`, `zero_cost`) are advisory.
@@ -92,12 +101,21 @@ They never change a verdict — otherwise the tool could be tuned to look good.
 - The engine calls no LLM, no network and no randomness. Same JSON in,
   byte-identical decision out; this is required for offline reproducibility.
 - The two bundled eval sets are **fabricated**, written by the rule author.
-  Their perfect scores prove rule consistency, not real-world effectiveness.
-  See `eval/README.md`.
+  Their perfect scores are a rule-consistency check, not real-world
+  effectiveness. See `eval/README.md`.
+- A blind protocol and answer-free prompts exist in `eval/blind/`, but
+  **no blind evaluation has been run**. There is no measured agreement score;
+  `scripts/blind_eval.py` prints `NOT RUN` rather than inventing one.
+- `scripts/property_scan.py` checks invariants over a fixed-seed parameter
+  space without using any golden label. It can find bugs; it cannot validate
+  whether the gates reflect good product judgement.
 - No real launch data, no real users, no external annotation, and no measured
   accuracy for evidence-risk flags or real outcomes exist in this project.
 - The tool does not tell you whether your eval was well designed. A curated
   test set that hides messy edge cases will still produce green verdicts;
   that is exactly what the Goodhart flags are meant to surface.
+- Upstream, `complaint-to-eval` answers "what should we test"; this skill
+  answers "can we ship". They are complementary and neither replaces the
+  other.
 
 Author: jian935 · MIT

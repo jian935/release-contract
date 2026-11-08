@@ -6,6 +6,11 @@
 
 > 它不是评测框架：不测量质量，只判定现有证据足以让模型在哪些地方独立行动。
 
+## 范围
+
+上游的 `complaint-to-eval` 回答「该测什么」，本 skill 回答「能不能发」。
+两者互补：前者产出用例候选，后者判定证据是否足以放行。
+
 ## 为什么
 
 一个总分回答不了上线问题。契约把流量拆成分片，逐片问：放行、转人工，还是再等证据？
@@ -69,6 +74,9 @@ TRAFFIC (denominator = full traffic 1.0)
 | `python -m release_contract.cli gates` | 列出六道闸 |
 | `python -m release_contract.cli eval` | 跑 dev 与 hold-out 两套 |
 | `python -m release_contract.cli version` | 打印版本 |
+| `python -m release_contract.cli diff examples/demo_contract.json examples/demo_contract_v2.json` | 逐分片对比两个版本 |
+
+`decide --fail-on FENCE,HOLD` 在任一分片命中列出的判定时返回非零退出码，便于流水线卡口。
 
 ## 评测集
 
@@ -82,11 +90,29 @@ TRAFFIC (denominator = full traffic 1.0)
 两套都是 1.0000，因为 golden 标注由规则作者按每道闸的分支直接写出。
 这只能证明规则执行一致、可离线复跑，**不能**证明真实场景有效；区间依然很宽。
 见 `eval/README.md`：为什么它跑出来好看、哪些项没有分数、以及证明每道闸都是承重墙的反向测试。
+上表是**规则一致性分数**，不是有效性结果，不该被当成对外成绩。
+
+## 独立证据
+
+两项检查不依赖作者写的 golden 标注：
+
+- `python scripts/property_scan.py` 用固定 seed 扫描参数空间，验证不变量：
+  流量核算、逐字节复跑、Wilson 单调性、消融单调性、非法输入必拒。
+  违规就是真 bug，不是标注分歧。
+- `python scripts/blind_eval.py` 用 `eval/blind/` 里去掉答案的题面，
+  把独立标注者与引擎判定对比。协议见 `eval/blind/README.md`。
+
+**没有跑过盲评**，没有实测一致率，也不宣称任何数字。
+
+什么能证伪它：独立标注者系统性不认同高危分片上的 `AUTO` 判定；
+或真实上线中某个 `AUTO` 分片的回退频率远高于其记录的 Wilson 基线所预测。
+两者都还没有测过。
 
 ## 未测
 
 - 没有真实上线数据、没有真实用户、没有真实模型输出、没有外部标注。
   证据风险标记与真实上线结果都没有实测准确率。
+- 没有独立标注者标注过盲评题面，没有实测一致率。
 - 引擎不调用大模型、不访问网络；同一份 JSON 产出逐字节一致的判定。
   它无法判断你的评测设计得好不好——藏掉边界样本的评测集照样能跑出绿色。
 - 与 promptfoo / Langfuse（跑评测）和 ship-gate 类工具（审代码与部署）是互补关系，不替代任何一方。

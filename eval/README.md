@@ -34,11 +34,28 @@ replayed offline, byte for byte.
 The Wilson 95% intervals are wide (`[0.8928, 1.0]` for dev with 32 scored
 segments, `[0.9011, 1.0]` for hold-out with 35). Even a perfect score on this
 few items does not support a strong claim. Report the interval with the
-accuracy, never the accuracy alone.
+accuracy, never the accuracy alone. Treat the table in the READMEs as a
+**rule-consistency score**, not an effectiveness result.
 
 If a future rules change causes the hold-out to drop, keep the lower number
 and do not go back and tune the rules on it. If a golden label is simply
 wrong, fix the label — not the engine.
+
+## Checks that do not use golden labels
+
+These exist because a golden label can only tell us whether the engine agrees
+with its author.
+
+- `python scripts/property_scan.py` — fixed-seed parameter scan asserting
+  invariants: traffic accounting, byte-identical replay, Wilson
+  monotonicity, ablation monotonicity, invalid-input rejection. A violation
+  is a real bug, not a disagreeing label.
+- `python scripts/blind_eval.py` — compares an independent annotator with
+  the engine using the answer-free prompts in `blind/prompts.jsonl`. The
+  protocol is in `blind/README.md`. **NOT RUN**: there is no measured
+  agreement score, and none is claimed.
+
+Both are invoked by `python scripts/quick_validate.py`.
 
 ## Reverse tests
 
@@ -51,13 +68,16 @@ accounting must still sum to full traffic.
 ## What is not scored
 
 Evidence-risk flags (advisory Goodhart warnings) are not scored. Real-world
-launch outcomes are not scored. There is no measured number for either, and
-none is claimed.
+launch outcomes are not scored. Blind agreement is not scored because no
+independent annotator has submitted labels. There is no measured number for
+any of these, and none is claimed.
 
 ## Reproduce
 
 ```
 python -m release_contract.cli eval
 python eval/run_eval.py
+python scripts/property_scan.py
+python scripts/blind_eval.py
 python scripts/quick_validate.py
 ```

@@ -258,6 +258,65 @@ def run_checks() -> list[Check]:
         )
     )
 
+    # 13. Blind prompts must be answer-free and in sync with the scored sets.
+    import importlib.util
+    import json
+
+    blind_path = ROOT / "eval" / "blind" / "prompts.jsonl"
+    blind_rows = [
+        json.loads(line) for line in _read(blind_path).splitlines() if line.strip()
+    ]
+    spec = importlib.util.spec_from_file_location(
+        "gen_blind_prompts", ROOT / "scripts" / "gen_blind_prompts.py"
+    )
+    gen = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(gen)
+    rebuilt = gen.build_rows()
+    leaked = [
+        r.get("id", "?")
+        for r in blind_rows
+        if any(k in r for k in ("expected", "why", "kind"))
+    ]
+    in_sync = blind_rows == rebuilt
+    checks.append(
+        _check(
+            "blind_prompts_answer_free_and_in_sync",
+            bool(blind_rows)
+            and not leaked
+            and {r["id"] for r in blind_rows} == (dev_ids | ho_ids)
+            and in_sync,
+            "rows=%d leaked=%s in_sync=%s" % (len(blind_rows), leaked, in_sync),
+        )
+    )
+
+    # 14. With no annotations, every public doc must say no score exists.
+    annotations = ROOT / "eval" / "blind" / "annotations.jsonl"
+    blind_readme = _read(ROOT / "eval" / "blind" / "README.md")
+    if not annotations.exists():
+        declared = (
+            "No blind evaluation has been run" in en
+            and "没有跑过盲评" in zh
+            and "NOT RUN" in blind_readme
+        )
+        detail = "no annotations; both READMEs and blind/README.md must declare NOT RUN"
+    else:
+        declared = "No blind evaluation has been run" not in en
+        detail = "annotations exist but README still claims no blind run"
+    checks.append(_check("no_blind_score_claimed", declared, detail))
+
+    # 15. Invariants that do not depend on any golden label.
+    from .properties import scan as prop_scan
+
+    props = prop_scan(trials=120)
+    checks.append(
+        _check(
+            "property_invariants_hold",
+            props["passed"],
+            "%d violations over %d trials"
+            % (len(props["violations"]), props["trials"]),
+        )
+    )
+
     return checks
 
 

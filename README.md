@@ -8,6 +8,12 @@ Version: 0.1.0 · MIT · [中文说明](README.zh-CN.md)
 > Not an eval framework: it does not measure quality. It decides where the
 > existing evidence justifies letting the model act alone.
 
+## Scope
+
+Upstream, `complaint-to-eval` answers "what should we test"; this skill
+answers "can we ship". They are complementary: one produces case candidates,
+the other decides whether the evidence is strong enough to release.
+
 ## Why
 
 One headline eval number cannot answer a launch question. A contract splits
@@ -76,6 +82,10 @@ tool could be tuned to look good.
 | `python -m release_contract.cli gates` | list the gates |
 | `python -m release_contract.cli eval` | run dev and hold-out suites |
 | `python -m release_contract.cli version` | print version |
+| `python -m release_contract.cli diff examples/demo_contract.json examples/demo_contract_v2.json` | compare two versions segment by segment |
+
+`decide --fail-on FENCE,HOLD` returns a non-zero exit code if any segment
+hits a listed verdict, so a pipeline can gate on it.
 
 ## Eval sets
 
@@ -91,13 +101,36 @@ Both scores are 1.0000 because the golden labels were written by the author
 of the rules, one branch per gate. That proves rule consistency and offline
 replay, **not** real-world effectiveness. The intervals stay wide. See
 `eval/README.md` for why it looks good, what is unscored, and the reverse
-tests that prove each gate is load-bearing.
+tests that prove each gate is load-bearing. Treat that table as a
+**rule-consistency score**, not an effectiveness result or a headline number.
+
+## Independent evidence
+
+Two checks do not depend on author-written golden labels:
+
+- `python scripts/property_scan.py` scans a fixed-seed parameter space and
+  asserts invariants: traffic accounting, byte-identical replay, Wilson
+  monotonicity, ablation monotonicity and invalid-input rejection. A
+  violation is a bug, not a disagreeing label.
+- `python scripts/blind_eval.py` compares an independent annotator with the
+  engine using answer-free prompts in `eval/blind/`. See
+  `eval/blind/README.md` for the protocol.
+
+**No blind evaluation has been run.** There is no measured agreement score,
+and no number is claimed for it.
+
+What would falsify this tool: an independent annotator systematically
+disagreeing with `AUTO` verdicts on high-harm segments, or a real launch
+where an `AUTO` segment needs a rollback far more often than its recorded
+Wilson baseline predicts. Neither has been measured.
 
 ## Not measured
 
 - No real launch data, no real users, no real model output, no external
   annotation. There is no measured accuracy for evidence-risk flags or for
   real launch outcomes.
+- No independent annotator has labelled the blind prompts; there is no
+  measured agreement score.
 - The engine calls no LLM and no network; the same JSON produces a
   byte-identical decision. It cannot tell you whether your eval was well
   designed — a curated test set that hides edge cases still produces green

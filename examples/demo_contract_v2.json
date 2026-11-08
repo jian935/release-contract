@@ -1,0 +1,42 @@
+{
+  "product": "SYNTHETIC DEMO v2 - fabricated numbers, not real launch data",
+  "guardrails": {
+    "min_sample_size": 100,
+    "min_success_rate": 0.9,
+    "max_harm": "medium",
+    "max_cost_per_case": 0.5,
+    "z": 1.96
+  },
+  "segments": [
+    {
+      "id": "routine_faq",
+      "volume_share": 0.6,
+      "n": 400,
+      "successes": 340,
+      "harm_if_wrong": "low",
+      "fallback": "none",
+      "cost_per_case": 0.02,
+      "human_review_cost": 0.0
+    },
+    {
+      "id": "billing_dispute",
+      "volume_share": 0.25,
+      "n": 300,
+      "successes": 296,
+      "harm_if_wrong": "medium",
+      "fallback": "human",
+      "cost_per_case": 0.05,
+      "human_review_cost": 0.2
+    },
+    {
+      "id": "contract_redline",
+      "volume_share": 0.1,
+      "n": 300,
+      "successes": 297,
+      "harm_if_wrong": "critical",
+      "fallback": "human",
+      "cost_per_case": 0.03,
+      "human_review_cost": 0.1
+    }
+  ]
+}
