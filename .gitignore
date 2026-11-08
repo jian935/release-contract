@@ -10,6 +10,7 @@ venv/
 # Independent annotations are measurement input, not a source file.
 eval/blind/annotations.jsonl
 eval/blind/answer_sheet.csv
+eval/blind/results/
 build/
 dist/
 *.zip

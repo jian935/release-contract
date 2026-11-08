@@ -80,10 +80,66 @@ class TestBlindIntake(unittest.TestCase):
         self.assertTrue(result["status"] == "measured")
         self.assertTrue(result["scored_segments"] == 1)
 
+    def test_stray_bom_in_header_does_not_hide_ids(self):
+        # A spreadsheet round-trip can leave a second BOM behind; the first
+        # header then reads "\ufeffid" and every row looks like it has no id.
+        tmp, path = self._csv(
+            "\ufeff\ufeffid,segment_id,verdict,rationale\n"
+            "dev-001,thin,AUTO,double-bom plumbing test\n"
+        )
+        with tmp:
+            result = self.mod.run(path)
+        self.assertTrue(result["status"] == "measured")
+        self.assertTrue(result["scored_segments"] == 1)
+
     def test_render_of_not_run_never_invents_a_number(self):
         result = self.mod.run(ROOT / "eval" / "blind" / "no_such_file.csv")
         text = self.mod.render(result)
         self.assertTrue("NOT RUN" in text)
+
+
+class TestDisagreementCause(unittest.TestCase):
+    """Grouping matters: one contested gate is a design argument, not noise."""
+
+    def setUp(self):
+        self.mod = _load_module()
+
+    def _contract(self, **seg):
+        base = {
+            "product": "test",
+            "guardrails": {
+                "min_sample_size": 100,
+                "min_success_rate": 0.9,
+                "max_harm": "medium",
+                "max_cost_per_case": 0.5,
+                "z": 1.96,
+            },
+            "segments": [
+                {
+                    "id": "s",
+                    "volume_share": 1.0,
+                    "n": 100,
+                    "successes": 95,
+                    "harm_if_wrong": "low",
+                    "fallback": "none",
+                    "cost_per_case": 0.02,
+                    "human_review_cost": 0.0,
+                }
+            ],
+        }
+        base["segments"][0].update(seg)
+        from release_contract.engine import contract_from_dict
+
+        return contract_from_dict(base)
+
+    def test_point_estimate_clears_floor_but_lower_bound_does_not(self):
+        cause = self.mod.diagnose(self._contract(), "s")
+        self.assertTrue(cause == self.mod.CAUSE_WILSON)
+
+    def test_a_second_violating_gate_is_not_blamed_on_wilson(self):
+        cause = self.mod.diagnose(self._contract(harm_if_wrong="high"), "s")
+        self.assertTrue(cause == self.mod.CAUSE_OTHER)
+
 
 
 if __name__ == "__main__":

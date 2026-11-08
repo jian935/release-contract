@@ -40,6 +40,31 @@ from release_contract.engine import (  # noqa: E402
 PROMPTS = ROOT / "eval" / "blind" / "prompts.jsonl"
 DEFAULT_ANNOTATIONS = ROOT / "eval" / "blind" / "annotations.jsonl"
 VALID_VERDICTS = ("AUTO", "FENCE", "HOLD")
+HARM_ORDER = {"low": 0, "medium": 1, "high": 2, "critical": 3}
+# A disagreement is worth more when it is isolated to one gate: that names the
+# design choice a reviewer is actually arguing with.
+CAUSE_WILSON = "wilson_lower_below_floor_but_point_estimate_above"
+CAUSE_OTHER = "other_gate_or_judgement"
+
+
+def diagnose(contract: Any, segment_id: str) -> str:
+    """Name the gate that produced a FENCE, so disagreements can be grouped."""
+    seg = next(s for s in contract.segments if s.id == segment_id)
+    g = contract.guardrails
+    point = seg.successes / seg.n if seg.n else 0.0
+    lower = wilson_interval(seg.successes, seg.n, g.z)[0] if seg.n else 0.0
+    only_wilson = (
+        seg.n >= g.min_sample_size
+        and point >= g.min_success_rate
+        and lower < g.min_success_rate
+        and HARM_ORDER[seg.harm_if_wrong] <= HARM_ORDER[g.max_harm]
+        and not (
+            seg.harm_if_wrong in ("high", "critical") and seg.fallback == "none"
+        )
+        and seg.cost_per_case + seg.human_review_cost <= g.max_cost_per_case
+    )
+    return CAUSE_WILSON if only_wilson else CAUSE_OTHER
+
 
 
 def _read_jsonl(path: Path) -> list[dict[str, Any]]:
@@ -66,7 +91,13 @@ def _load_annotations(path: Path) -> list[dict[str, Any]]:
     # utf-8-sig also reads plain UTF-8 files, and handles the BOM that the
     # single-sheet CSV needs for Excel / WPS.
     with path.open(encoding="utf-8-sig", newline="") as f:
-        for row in csv.DictReader(f):
+        for raw_row in csv.DictReader(f):
+            # Spreadsheet exports can carry a BOM that survives the codec (a
+            # double BOM is common after a round-trip), which would otherwise
+            # turn the first header into "\ufeffid" and hide every id.
+            row = {
+                (k or "").lstrip("\ufeff").strip(): v for k, v in raw_row.items()
+            }
             case_id = _pick(row, "id", "题目编号")
             seg_id = _pick(row, "segment_id", "分片名")
             verdict = _pick(row, "verdict", "你的判定").upper()
@@ -106,13 +137,15 @@ def run(annotations_path: Path) -> dict[str, Any]:
     total = 0
     correct = 0
     disagreements: list[dict[str, str]] = []
+    cause_counts: dict[str, int] = {}
 
     for ann in annotations:
         case_id = ann["id"]
         prompt = prompts.get(case_id)
         if prompt is None:
             raise ValueError("annotation refers to unknown prompt id: %s" % case_id)
-        decision = decide(contract_from_dict(prompt["contract"]))
+        contract = contract_from_dict(prompt["contract"])
+        decision = decide(contract)
         engine = {s.id: s.verdict for s in decision.segments}
         for seg_id, label in ann["verdicts"].items():
             got = engine.get(seg_id)
@@ -124,12 +157,15 @@ def run(annotations_path: Path) -> dict[str, Any]:
             if got == label:
                 correct += 1
             else:
+                cause = diagnose(contract, seg_id)
+                cause_counts[cause] = cause_counts.get(cause, 0) + 1
                 disagreements.append(
                     {
                         "case": case_id,
                         "segment": seg_id,
                         "annotator": label,
                         "engine": got,
+                        "cause": cause,
                     }
                 )
 
@@ -150,6 +186,7 @@ def run(annotations_path: Path) -> dict[str, Any]:
         "correct": correct,
         "unannotated_segments": total_possible - total,
         "disagreements": disagreements,
+        "disagreement_causes": cause_counts,
         "annotated_cases": len(annotations),
         "message": (
             "Agreement is between the independent annotator and the engine, "
@@ -170,6 +207,8 @@ def render(result: dict[str, Any]) -> str:
         "  compared with: engine verdicts, not author-written golden labels",
         "  disagreements: %d" % len(result["disagreements"]),
     ]
+    for cause, count in sorted(result.get("disagreement_causes", {}).items()):
+        lines.append("    cause %s: %d" % (cause, count))
     for d in result["disagreements"]:
         lines.append(
             "    %s/%s annotator=%s engine=%s"

@@ -118,21 +118,32 @@ Two checks do not depend on author-written golden labels:
   `answer_sheet.template.csv` and pass the CSV path to the script; undecided
   rows are skipped, never guessed.
 
-**No blind evaluation has been run.** There is no measured agreement score,
-and no number is claimed for it.
+**One blind round was returned locally; no agreement score is published.**
+The filled sheet is measurement input and stays out of the repository, so a
+reader could not check any rate quoted from it — which is the same
+unfalsifiable claim this tool exists to reject. What the round did establish is
+recorded in `eval/blind/README.md`: every single disagreement had one cause —
+the point estimate cleared the floor while the Wilson lower bound did not. No
+disagreement went the other way, i.e. the engine never released a segment the
+annotator would have fenced.
 
 What would falsify this tool: an independent annotator systematically
-disagreeing with `AUTO` verdicts on high-harm segments, or a real launch
-where an `AUTO` segment needs a rollback far more often than its recorded
-Wilson baseline predicts. Neither has been measured.
+disagreeing with `AUTO` verdicts on high-harm segments (the opposite direction
+from the observed bias), or a real launch where an `AUTO` segment needs a
+rollback far more often than its recorded Wilson baseline predicts. Neither has
+been measured.
 
 ## Not measured
 
 - No real launch data, no real users, no real model output, no external
   annotation. There is no measured accuracy for evidence-risk flags or for
   real launch outcomes.
-- No independent annotator has labelled the blind prompts; there is no
-  measured agreement score.
+- One local annotator has labelled the blind prompts, with no second reviewer
+  and no published sheet; no agreement score is claimed.
+- The engine is knowingly more conservative than a point-estimate read of the
+  same numbers: it fences segments whose observed rate clears the floor while
+  the Wilson lower bound does not. If your organisation intends point-estimate
+  semantics, this tool will over-fence by design.
 - The engine calls no LLM and no network; the same JSON produces a
   byte-identical decision. It cannot tell you whether your eval was well
   designed — a curated test set that hides edge cases still produces green

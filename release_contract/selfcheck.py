@@ -289,20 +289,36 @@ def run_checks() -> list[Check]:
         )
     )
 
-    # 14. With no annotations, every public doc must say no score exists.
-    annotations = ROOT / "eval" / "blind" / "annotations.jsonl"
+    # 14. A blind score may only be published if the annotation input is
+    #     published with it. The sheet is gitignored, so no rate is citable.
     blind_readme = _read(ROOT / "eval" / "blind" / "README.md")
-    if not annotations.exists():
-        declared = (
-            "No blind evaluation has been run" in en
-            and "没有跑过盲评" in zh
-            and "NOT RUN" in blind_readme
+    declaration_en = "no agreement score is published" in en.lower()
+    declaration_zh = "不公布一致率" in zh
+    declaration_blind = "No agreement score is published" in blind_readme
+    published_rate = [
+        name
+        for name, text in (("README.md", en), ("README.zh-CN.md", zh),
+                           ("eval/blind/README.md", blind_readme))
+        if re.search(r"agreement\s*[:=]\s*0\.\d", text, re.I)
+        or re.search(r"一致率\s*[:：=]?\s*0\.\d", text)
+    ]
+    checks.append(
+        _check(
+            "no_blind_score_published",
+            declaration_en
+            and declaration_zh
+            and declaration_blind
+            and not published_rate,
+            "declared en=%s zh=%s blind=%s; published rates=%s"
+            % (
+                declaration_en,
+                declaration_zh,
+                declaration_blind,
+                published_rate or "none",
+            ),
         )
-        detail = "no annotations; both READMEs and blind/README.md must declare NOT RUN"
-    else:
-        declared = "No blind evaluation has been run" not in en
-        detail = "annotations exist but README still claims no blind run"
-    checks.append(_check("no_blind_score_claimed", declared, detail))
+    )
+
 
     # 15. Invariants that do not depend on any golden label.
     from .properties import scan as prop_scan

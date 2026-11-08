@@ -49,14 +49,23 @@ def main() -> int:
     print("")
 
     print("== blind evaluation status ==")
+    # Score whatever annotation input this checkout happens to have; the
+    # script itself reports NOT RUN when there is none.
+    blind_args = [sys.executable, "scripts/blind_eval.py"]
+    for candidate in ("eval/blind/answer_sheet.csv", "eval/blind/annotations.jsonl"):
+        if (ROOT / candidate).exists():
+            blind_args.append(candidate)
+            break
     blind = subprocess.run(
-        [sys.executable, "scripts/blind_eval.py"],
+        blind_args,
         cwd=str(ROOT),
         capture_output=True,
         encoding="utf-8",
         errors="replace",
     )
     print((blind.stdout or "").strip())
+    if len(blind_args) > 2:
+        print("  (scored from a local annotation input; not a published figure)")
     if blind.returncode != 0:
         print((blind.stderr or "")[-2000:])
         print("BLIND EVAL SCRIPT FAILED")

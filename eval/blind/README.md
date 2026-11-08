@@ -1,6 +1,11 @@
 # Blind evaluation protocol
 
-**Status: NOT RUN. There is no measured agreement score.** Do not report one.
+**Status: one local round returned. No agreement score is published.** The
+filled sheet is a measurement input and is not in this repository, so a number
+quoted from it would be unverifiable by anyone reading this page.
+
+What the round established (see "Round log" below): every disagreement had the
+same cause, and none pointed in the dangerous direction.
 
 ## Why this exists
 
@@ -88,3 +93,33 @@ unannotated. Undecided rows are never guessed and never counted as agreement.
 Project self-checks assert that the packet stays in sync with the prompts,
 that every verdict cell stays empty in the shipped template, and that no
 accuracy figure leaks into any file an annotator sees.
+
+## Round log
+
+| round | who | input | published | outcome |
+|---|---|---|---|---|
+| 1 (2026-11-09) | one reader, no second reviewer | one-file sheet, every segment decided | no — sheet is local-only | all disagreements share one cause |
+
+### What round 1 established
+
+Every disagreement was the same class: the observed rate cleared the contract
+floor while the **Wilson lower bound did not**, and no other gate was violated.
+The engine was never more permissive than the annotator — there was no case of
+the tool releasing traffic a careful reader would fence.
+
+The scoring script now labels each disagreement with its cause
+(`wilson_lower_below_floor_but_point_estimate_above` versus
+`other_gate_or_judgement`), so a second round can be grouped the same way
+without hand analysis.
+
+This is a **known conservative bias, not a defect to be patched away**: the
+whole point of gate G2 is to refuse point-estimate reasoning. A team that
+deliberately wants point-estimate semantics should not use this tool.
+
+### Limits of a single round
+
+One annotator, no second reviewer, uniformly worded rationales (consistent with
+a fast pass rather than per-case reasoning), and no measure of
+intra-annotator consistency. Round 1 is evidence about *which rule is
+contested*, not an accuracy estimate — which is why no score is quoted above.
+

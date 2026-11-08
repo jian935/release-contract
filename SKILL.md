@@ -103,9 +103,12 @@ They never change a verdict — otherwise the tool could be tuned to look good.
 - The two bundled eval sets are **fabricated**, written by the rule author.
   Their perfect scores are a rule-consistency check, not real-world
   effectiveness. See `eval/README.md`.
-- A blind protocol and answer-free prompts exist in `eval/blind/`, but
-  **no blind evaluation has been run**. There is no measured agreement score;
-  `scripts/blind_eval.py` prints `NOT RUN` rather than inventing one.
+- A blind protocol and answer-free prompts exist in `eval/blind/`. One local
+  round was returned, but **no agreement score is published**: the filled
+  sheet is not in the repository, so the number would be unverifiable. The
+  round's repeatable finding: every disagreement was the Wilson gate (point
+  estimate above the floor, lower bound below it), never a release the
+  annotator would have blocked. Rank it as a conservative bias, not accuracy.
 - `scripts/property_scan.py` checks invariants over a fixed-seed parameter
   space without using any golden label. It can find bugs; it cannot validate
   whether the gates reflect good product judgement.
