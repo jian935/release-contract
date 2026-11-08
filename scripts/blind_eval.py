@@ -50,15 +50,26 @@ def _read_jsonl(path: Path) -> list[dict[str, Any]]:
     ]
 
 
+def _pick(row: dict, *names: str) -> str:
+    """Accept either the English template columns or the Chinese one-sheet."""
+    for name in names:
+        value = row.get(name)
+        if value is not None and str(value).strip():
+            return str(value).strip()
+    return ""
+
+
 def _load_annotations(path: Path) -> list[dict[str, Any]]:
     if path.suffix.lower() != ".csv":
         return _read_jsonl(path)
     grouped: dict[str, dict[str, str]] = {}
-    with path.open(encoding="utf-8", newline="") as f:
+    # utf-8-sig also reads plain UTF-8 files, and handles the BOM that the
+    # single-sheet CSV needs for Excel / WPS.
+    with path.open(encoding="utf-8-sig", newline="") as f:
         for row in csv.DictReader(f):
-            case_id = (row.get("id") or "").strip()
-            seg_id = (row.get("segment_id") or "").strip()
-            verdict = (row.get("verdict") or "").strip().upper()
+            case_id = _pick(row, "id", "题目编号")
+            seg_id = _pick(row, "segment_id", "分片名")
+            verdict = _pick(row, "verdict", "你的判定").upper()
             if not case_id or not seg_id:
                 raise ValueError("annotation row is missing id or segment_id")
             if not verdict:

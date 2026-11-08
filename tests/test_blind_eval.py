@@ -70,6 +70,16 @@ class TestBlindIntake(unittest.TestCase):
             with self.assertRaises(ValueError):
                 self.mod.run(path)
 
+    def test_single_sheet_chinese_columns_are_accepted(self):
+        tmp, path = self._csv(
+            "题目编号,分片名,你的判定,理由\n"
+            "dev-001,thin,AUTO,one-sheet plumbing test\n"
+        )
+        with tmp:
+            result = self.mod.run(path)
+        self.assertTrue(result["status"] == "measured")
+        self.assertTrue(result["scored_segments"] == 1)
+
     def test_render_of_not_run_never_invents_a_number(self):
         result = self.mod.run(ROOT / "eval" / "blind" / "no_such_file.csv")
         text = self.mod.render(result)

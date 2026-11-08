@@ -358,6 +358,39 @@ def run_checks() -> list[Check]:
         )
     )
 
+    # 17. The single handed-out CSV: self-contained, answer-free, in sync.
+    single_spec = importlib.util.spec_from_file_location(
+        "gen_single_sheet", ROOT / "scripts" / "gen_single_sheet.py"
+    )
+    single = importlib.util.module_from_spec(single_spec)
+    single_spec.loader.exec_module(single)
+    rebuilt_single = single.build()
+    single_path = ROOT / "eval" / "blind" / "盲评填写表.csv"
+    single_text = single_path.read_text(encoding="utf-8-sig", errors="replace")
+    single_rows = list(csv.DictReader(io.StringIO(single_text)))
+    single_filled = [
+        r for r in single_rows if (r.get("你的判定") or "").strip()
+    ]
+    single_leaks = any(
+        s in single_text for s in ("1.0000", "0.8928", "0.9011")
+    )
+    checks.append(
+        _check(
+            "single_sheet_answer_free_and_in_sync",
+            single_text == rebuilt_single
+            and bool(single_rows)
+            and not single_filled
+            and not single_leaks,
+            "rows=%d in_sync=%s filled=%d score_leaks=%s"
+            % (
+                len(single_rows),
+                single_text == rebuilt_single,
+                len(single_filled),
+                single_leaks,
+            ),
+        )
+    )
+
     return checks
 
 
