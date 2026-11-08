@@ -1,0 +1,13 @@
+# Local-only / derived files must never be packaged or committed.
+# The release zip is built from `git ls-files`, not from a recursive copy.
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+.local/
+build/
+dist/
+*.zip
+.DS_Store

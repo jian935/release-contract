@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+env:
+  PYTHONIOENCODING: utf-8
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      # No generated build artefacts: the repo is pure source, so nothing
+      # gitignored is required before the tests run.
+      - name: Run unit tests, eval suites and project locks
+        run: python scripts/quick_validate.py
+      - name: Verify the example contract still replays
+        run: python -m release_contract.cli decide examples/demo_contract.json --json
