@@ -553,22 +553,33 @@ def run_checks() -> list[Check]:
         )
     ]
     batch_in_sync = batch_text == batch.build_prompts()
+    # A `covers` note must describe the input, not the verdict. Anyone who
+    # annotates this batch may read the generator, so "G3 fires here" would
+    # turn the blind sheet into a reading comprehension test.
+    verdict_words = re.compile(
+        r"\b(AUTO|FENCE|HOLD)\b|\b(passes|fires|fenced|released)\b"
+    )
+    covers_leak = [
+        c["id"] for c in batch.CASES if verdict_words.search(c["covers"])
+    ]
     checks.append(
         _check(
             "next_batch_answer_free_and_disjoint",
             bool(batch_rows)
             and not batch_leak
             and batch_in_sync
+            and not covers_leak
             and not (batch_case_ids & first_case_ids)
             and not (batch_segment_ids & first_segment_ids),
             "cases=%d segments=%d distinct_names=%d in_sync=%s leaked=%s "
-            "reused_case_ids=%d reused_segment_ids=%d"
+            "verdicts_in_covers=%s reused_case_ids=%d reused_segment_ids=%d"
             % (
                 len(batch_rows),
                 batch_segment_count,
                 len(batch_segment_ids),
                 batch_in_sync,
                 batch_leak,
+                covers_leak,
                 len(batch_case_ids & first_case_ids),
                 len(batch_segment_ids & first_segment_ids),
             ),

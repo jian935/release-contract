@@ -99,80 +99,85 @@ def _seg(sid, n, successes, harm, fallback, cost, human_cost, volume):
 
 # 400/380 (point 0.95, Wilson lower 0.9240) is the control rate: it clears G2
 # under BASE, so any FENCE below comes from the gate the case targets.
+#
+# `covers` names the input dimension a case was chosen for. It must describe the
+# INPUT only -- never "this passes G3" or "this is fenced". Anyone who annotates
+# this batch may read this file, so a note that states the expected verdict
+# would turn the blind sheet into a reading comprehension test.
 CASES = [
-    # --- G3: the harm ceiling, which the first batch tested at almost no boundary
-    {"id": "nb-01", "covers": "harm equals the ceiling exactly (medium/medium)",
+    # --- harm ceiling
+    {"id": "nb-01", "covers": "harm equals a medium ceiling",
      "guardrails": BASE,
      "segments": [_seg("faq-bot", 400, 380, "medium", "none", 0.02, 0.0, 1.0)]},
-    {"id": "nb-02", "covers": "ceiling lowered to low; harm equals it",
+    {"id": "nb-02", "covers": "harm equals a low ceiling",
      "guardrails": G_FLOOR_LOW,
      "segments": [_seg("faq-bot", 400, 380, "low", "none", 0.02, 0.0, 1.0)]},
-    {"id": "nb-03", "covers": "harm one rank above the ceiling, fallback present",
+    {"id": "nb-03", "covers": "harm one rank above a medium ceiling",
      "guardrails": BASE,
      "segments": [_seg("refund-flow", 400, 380, "high", "human", 0.02, 0.0, 1.0)]},
-    {"id": "nb-04", "covers": "harm two ranks above the ceiling",
+    {"id": "nb-04", "covers": "harm two ranks above a medium ceiling",
      "guardrails": BASE,
      "segments": [_seg("claims-triage", 500, 480, "critical", "human", 0.02, 0.0, 1.0)]},
-    {"id": "nb-05", "covers": "ceiling raised to critical; harm equals it",
+    {"id": "nb-05", "covers": "harm equals a critical ceiling",
      "guardrails": G_FLOOR_CRITICAL,
      "segments": [_seg("claims-triage", 500, 485, "critical", "human", 0.02, 0.0, 1.0)]},
-    {"id": "nb-06", "covers": "G3 passes (harm equals high ceiling) but G4 fires on fallback=none",
+    {"id": "nb-06", "covers": "harm equals a high ceiling, fallback absent",
      "guardrails": G_FLOOR_HIGH,
      "segments": [_seg("invoice-parse", 400, 380, "high", "none", 0.02, 0.0, 1.0)]},
 
-    # --- G4/G5: the fallback semantics. Only `human` has its cost loaded.
-    {"id": "nb-07", "covers": "degrade + human_review_cost 0.6; loaded cost ignores it",
+    # --- fallback kind and what it costs
+    {"id": "nb-07", "covers": "degrade with a non-zero review cost",
      "guardrails": G_FLOOR_HIGH,
      "segments": [_seg("billing-recon", 400, 380, "high", "degrade", 0.02, 0.6, 1.0)]},
-    {"id": "nb-08", "covers": "rollback + human_review_cost 0.6; same as degrade",
+    {"id": "nb-08", "covers": "rollback with a non-zero review cost",
      "guardrails": G_FLOOR_HIGH,
      "segments": [_seg("orders-sync", 400, 380, "high", "rollback", 0.02, 0.6, 1.0)]},
-    {"id": "nb-09", "covers": "human + the same 0.6; loaded cost now breaches the cap",
+    {"id": "nb-09", "covers": "human with the same non-zero review cost",
      "guardrails": G_FLOOR_HIGH,
      "segments": [_seg("invoice-parse", 400, 380, "high", "human", 0.02, 0.6, 1.0)]},
-    {"id": "nb-10", "covers": "human with zero review cost; fallback present but free",
+    {"id": "nb-10", "covers": "human with zero review cost",
      "guardrails": G_FLOOR_HIGH,
      "segments": [_seg("invoice-parse", 400, 380, "high", "human", 0.02, 0.0, 1.0)]},
     {"id": "nb-11", "covers": "critical harm with degrade instead of human",
      "guardrails": G_FLOOR_CRITICAL,
      "segments": [_seg("claims-triage", 500, 485, "critical", "degrade", 0.02, 0.0, 1.0)]},
-    {"id": "nb-12", "covers": "medium harm with a human fallback (G4 must stay quiet)",
+    {"id": "nb-12", "covers": "medium harm carrying a human fallback",
      "guardrails": BASE,
      "segments": [_seg("ticket-router", 400, 380, "medium", "human", 0.02, 0.02, 1.0)]},
 
-    # --- G1: sample size, one either side of the threshold
-    {"id": "nb-13", "covers": "n = min_sample_size - 1, rate high enough to pass G2",
+    # --- sample size around the floor
+    {"id": "nb-13", "covers": "n one below the sample floor",
      "guardrails": BASE,
      "segments": [_seg("faq-bot", 99, 98, "low", "none", 0.02, 0.0, 1.0)]},
-    {"id": "nb-14", "covers": "n = min_sample_size exactly",
+    {"id": "nb-14", "covers": "n exactly at the sample floor",
      "guardrails": BASE,
      "segments": [_seg("faq-bot", 100, 98, "low", "none", 0.02, 0.0, 1.0)]},
-    {"id": "nb-15", "covers": "n = min_sample_size + 1",
+    {"id": "nb-15", "covers": "n one above the sample floor",
      "guardrails": BASE,
      "segments": [_seg("faq-bot", 101, 99, "low", "none", 0.02, 0.0, 1.0)]},
-    {"id": "nb-16", "covers": "n = 0; no evidence at all",
+    {"id": "nb-16", "covers": "n is zero",
      "guardrails": BASE,
      "segments": [_seg("new-flow", 0, 0, "low", "none", 0.02, 0.0, 1.0)]},
 
-    # --- G2: Wilson, including the case where the point estimate clears the floor
-    {"id": "nb-17", "covers": "point 0.95 at n=200; lower bound also clears 0.9",
+    # --- rate and floor
+    {"id": "nb-17", "covers": "200 cases, 190 successes, floor 0.9",
      "guardrails": BASE,
      "segments": [_seg("faq-bot", 200, 190, "low", "none", 0.02, 0.0, 1.0)]},
-    {"id": "nb-18", "covers": "point 0.95 at n=100; lower bound falls below 0.9",
+    {"id": "nb-18", "covers": "100 cases, 95 successes, floor 0.9",
      "guardrails": BASE,
      "segments": [_seg("faq-bot", 100, 95, "low", "none", 0.02, 0.0, 1.0)]},
-    {"id": "nb-19", "covers": "same numbers as nb-18 with the floor moved to 0.88",
+    {"id": "nb-19", "covers": "100 cases, 95 successes, floor 0.88",
      "guardrails": G_RATE_LOW88,
      "segments": [_seg("faq-bot", 100, 95, "low", "none", 0.02, 0.0, 1.0)]},
-    {"id": "nb-20", "covers": "floor 1.0; a perfect 500/500 still cannot reach it",
+    {"id": "nb-20", "covers": "floor 1.0 with a perfect 500/500 record",
      "guardrails": G_RATE_ONE,
      "segments": [_seg("faq-bot", 500, 500, "low", "none", 0.02, 0.0, 1.0)]},
-    {"id": "nb-21", "covers": "zero successes, 500 cases",
+    {"id": "nb-21", "covers": "zero successes out of 500",
      "guardrails": BASE,
      "segments": [_seg("spam-filter", 500, 0, "low", "none", 0.02, 0.0, 1.0)]},
 
-    # --- multi-segment contracts and the global coverage gate
-    {"id": "nb-22", "covers": "three segments summing to 1.0; one is too thin to judge",
+    # --- volume, multi-segment contracts and undeclared traffic
+    {"id": "nb-22", "covers": "three segments summing to 1.0, the last at n=50",
      "guardrails": BASE,
      "segments": [
          _seg("faq-bot", 400, 380, "low", "none", 0.02, 0.0, 0.40),
@@ -185,7 +190,7 @@ CASES = [
          _seg("faq-bot", 400, 380, "low", "none", 0.02, 0.0, 0.500),
          _seg("refund-flow", 400, 380, "low", "none", 0.02, 0.0, 0.499),
      ]},
-    {"id": "nb-24", "covers": "one healthy segment and one clearly failing, 0.6/0.4",
+    {"id": "nb-24", "covers": "two segments at 300/400 and 380/400",
      "guardrails": BASE,
      "segments": [
          _seg("faq-bot", 400, 380, "low", "none", 0.02, 0.0, 0.6),
@@ -199,24 +204,24 @@ CASES = [
          _seg("order-status", 500, 480, "low", "none", 0.02, 0.0, 0.2),
          _seg("ticket-router", 200, 190, "low", "none", 0.02, 0.0, 0.2),
      ]},
-    {"id": "nb-26", "covers": "5% of traffic undeclared while both segments are healthy",
+    {"id": "nb-26", "covers": "5% of traffic undeclared, both segments healthy",
      "guardrails": BASE,
      "segments": [
          _seg("faq-bot", 400, 380, "low", "none", 0.02, 0.0, 0.60),
          _seg("refund-flow", 400, 380, "low", "none", 0.02, 0.0, 0.35),
      ]},
 
-    # --- G5 boundary, and a contract with every threshold opened wide
-    {"id": "nb-27", "covers": "cost_per_case equals the cap exactly",
+    # --- cost around the cap
+    {"id": "nb-27", "covers": "cost_per_case exactly at the cap",
      "guardrails": BASE,
      "segments": [_seg("faq-bot", 400, 380, "low", "none", 0.50, 0.0, 1.0)]},
     {"id": "nb-28", "covers": "cost_per_case one ten-thousandth above the cap",
      "guardrails": BASE,
      "segments": [_seg("faq-bot", 400, 380, "low", "none", 0.5001, 0.0, 1.0)]},
-    {"id": "nb-29", "covers": "every threshold opened wide; 20/10 would fail anywhere else",
+    {"id": "nb-29", "covers": "every threshold loosened to its legal minimum",
      "guardrails": G_WIDE_OPEN,
      "segments": [_seg("sandbox-bot", 20, 10, "low", "none", 0.02, 0.0, 1.0)]},
-    {"id": "nb-30", "covers": "G3 passes at critical ceiling, G4 fires on fallback=none",
+    {"id": "nb-30", "covers": "critical harm at a critical ceiling, fallback absent",
      "guardrails": G_FLOOR_CRITICAL,
      "segments": [_seg("claims-triage", 500, 485, "critical", "none", 0.02, 0.0, 1.0)]},
 ]

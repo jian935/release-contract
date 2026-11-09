@@ -26,9 +26,9 @@ than its row count:
 
 - `nb-07` / `nb-08` / `nb-09` share n, successes, harm and the 0.6 review cost,
   and differ only in `fallback`. Only `human` adds that review cost to the
-  per-case cost, so two of the three are released at a real cost of 0.62 against
-  a 0.5 cap while the third is fenced. Whether that is right is a judgement
-  question, not a bug report — it is written down as such, not patched.
+  per-case cost, so the three do not face the same effective cost against the
+  same cap. Whether that is right is a judgement question, not a bug report;
+  nothing has been changed on the strength of it.
 - `nb-18` / `nb-19` share 100/95 and differ only in the floor (0.9 vs 0.88).
 - `nb-13` / `nb-14` / `nb-15` are n = 99 / 100 / 101 against a 100 floor.
 
