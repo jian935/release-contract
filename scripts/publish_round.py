@@ -49,6 +49,7 @@ def build(
     date: str,
     annotator: str,
     prompts: "Path | None" = None,
+    kind: str = "blind_round",
 ) -> dict:
     blind = _load("blind_eval", "scripts/blind_eval.py")
     scored = blind.run(sheet, prompts)
@@ -61,6 +62,7 @@ def build(
     )
     return {
         "round": round_id,
+        "kind": kind,
         "date": date,
         "annotator": annotator,
         "sheet": _relative(sheet),
@@ -91,6 +93,12 @@ def main() -> int:
         default=None,
         help="prompt file for this batch (default: the first batch)",
     )
+    ap.add_argument(
+        "--kind",
+        default="blind_round",
+        help="blind_round (a human reader) or model_check (a model). "
+        "A model's answers must not be published as a blind round.",
+    )
     ap.add_argument("--force", action="store_true")
     args = ap.parse_args()
 
@@ -103,7 +111,7 @@ def main() -> int:
             if not Path(args.prompts).is_absolute()
             else Path(args.prompts)
         )
-    result = build(sheet, args.round_id, args.date, args.annotator, prompts)
+    result = build(sheet, args.round_id, args.date, args.annotator, prompts, args.kind)
     text = json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
 
     if out.exists() and not args.force:

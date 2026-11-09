@@ -1,11 +1,11 @@
 # Next batch: the second case set
 
 `sheet.csv` is a second, independent packet of **30 contracts / 38 segments**
-built to reach inputs the first set never tested. Round 4 has been scored on it
-and is published in `../rounds/round4/` (**0.8947**, Wilson [0.7587, 0.9583]);
-the filled sheet is archived there as `answers.csv`. This folder keeps the
-answer-free prompts, the generator and a blank copy, so the batch can be
-re-scored and a second reader can still be added.
+built to reach inputs the first set never tested. A **language model** answered
+it; that sheet is kept in `../model_check/` with `"kind": "model_check"` and is
+not a human round. **No person has answered these cases yet**, so a human round
+on this packet is still open. This folder keeps the answer-free prompts, the
+generator and a blank copy, so the batch can be reused for that.
 
 ## Why a new batch instead of a fourth round on the old one
 
@@ -57,21 +57,26 @@ appears in either.
 ## Coordinator workflow
 
 Hand the reader **only** `sheet.csv`. Do not hand them this file, `prompts.jsonl`,
-or anything under `rounds/`.
+or anything under `rounds/` or `model_check/`.
 
 ```bash
 # score a returned sheet against this batch's prompts, without publishing
 python scripts/blind_eval.py path/to/returned.csv \
   --prompts eval/blind/next_batch/prompts.jsonl
 
-# freeze it, if you decide to publish it
+# freeze it as a human round, if you decide to publish it
+# (rounds/round4/ is still empty: only a model has answered this set)
 python scripts/publish_round.py --round 4 \
   --prompts eval/blind/next_batch/prompts.jsonl \
   --sheet eval/blind/rounds/round4/answers.csv \
   --out   eval/blind/rounds/round4/result.json \
   --date  YYYY-MM-DD \
-  --annotator "fifth reader; declared not to have seen any published round"
+  --annotator "a human reader; declared not to have seen any published answer"
 ```
+
+If the answers come from a model instead, pass `--kind model_check` and write the
+output under `../model_check/`. The self-check fails when a `model_check` result
+is labelled as a blind round, or when its annotator field does not say "model".
 
 Without `--prompts`, both scripts read the first batch's prompt file and will
 reject every row of this sheet as an unknown case id. That failure is deliberate:
@@ -93,6 +98,6 @@ sheet must stay blank with the same 15 columns as `../盲评填写表.csv`.
 
 Same as `../next_round/README.md`: do not read `../rounds/`, do not read the
 results section of the project README, do not run the CLI, do not discuss these
-cases with someone who has. Round 4 is published, so a second reader is still
-useful — but they must not read `../rounds/round4/` first, or the two numbers are
-not independent and no kappa can be computed between them.
+cases with someone who has. The model cross-check in `../model_check/` is
+published too — a human reader must not read it first, or their answers are no
+longer independent of it.

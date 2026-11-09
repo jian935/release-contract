@@ -93,28 +93,32 @@ and two silent release paths are closed.**
   instead of a new rule question. The batch targets inputs the first one never
   tested — four-segment contracts, `n = 0`, `degrade`/`rollback` carrying a
   non-zero review cost, and ceilings other than `medium` — and three cases are
-  deliberate pairs that differ in exactly one field. Round 4 was scored on it
-  and is published below.
+  deliberate pairs that differ in exactly one field. A model cross-check was run
+  on it (below).
 - `blind_eval.py` and `publish_round.py` now take `--prompts`, so a second batch
   is scored against its own prompt file. Without the flag they read the first
   batch and **refuse** every row of a new sheet, rather than silently scoring a
   smaller denominator. Two tests hold that: the batch sheet scores 1/1 against
   its own prompts and raises against the old ones.
-- Two project locks added (23 now): the batch prompts must stay answer-free,
+- Three project locks added (24 now): the batch prompts must stay answer-free,
   share no case id or segment name with the first batch, and match the
   generator byte for byte; the batch sheet must stay blank, reproducible, and
-  use the same 15 columns as the first sheet.
-- Published blind round 4 on that batch: **0.8947** (34/38), Wilson 95%
-  [0.7587, 0.9583], four disagreements — all `FENCE` by the reader against
-  `AUTO` by the engine. They are one question: G4's floor (`medium` or `high`)
-  and whether `degrade`/`rollback` count as a fallback. Recorded as open
-  question 3 in `DESIGN.md` and priced at 0/1 and 1/3 flipped segments.
-  **Not implemented:** adopting both would make this round 38/38, which is an
-  agreement produced by editing the rule until it agrees, not a measurement.
-- `publish_round.py` now records the `prompts` path in `result.json`, and both
-  the self-check and `quick_validate.py` read it. A round on a different case
-  set is therefore recomputed against the right questions; without it, round 4
-  failed to re-score with every `nb-*` row reported as an unknown case id.
+  use the same 15 columns as the first sheet; and the model cross-check must
+  stay labelled `kind: model_check` with an annotator that says "model", so it
+  can never be cited as a human round.
+- Ran a **model cross-check** on that batch and kept it out of `rounds/`: a
+  language model answered all 38 segments at **0.8947** (34/38), Wilson 95%
+  [0.7587, 0.9583]. It is not a fourth reader. Its four disagreements are still
+  one real question — G4's floor (`medium` or `high`) and whether
+  `degrade`/`rollback` count as a fallback — recorded as open question 3 in
+  `DESIGN.md` and priced at 0/1 and 1/3 flipped segments. **Not implemented:**
+  adopting both would make that sheet 38/38, which is an agreement produced by
+  editing the rule until it agrees, not a measurement.
+- `publish_round.py` now records `kind` (default `blind_round`) and the `prompts`
+  path in `result.json`, and both the self-check and `quick_validate.py` read
+  them. A model's answers therefore cannot be published as a blind round, and a
+  round on another case set is recomputed against its own questions instead of
+  failing with every row reported as an unknown case id.
 
 ## 0.2.0 — 2026-11-09
 

@@ -1,7 +1,7 @@
 {
   "agreement": 0.8947,
   "annotated_cases": 30,
-  "annotator": "fourth reader, independent of the first three; declared not to have read eval/blind/rounds/",
+  "annotator": "a second language model (Doubao), answering in a chat window; returned as a filled CSV by the project owner, not reviewed by a human",
   "compared_with": "engine verdicts, not author-written golden labels",
   "correct": 34,
   "date": "2026-11-09",
@@ -38,10 +38,11 @@
       "segment": "claims-triage"
     }
   ],
+  "kind": "model_check",
   "prompts": "eval/blind/next_batch/prompts.jsonl",
   "round": 4,
   "scored_segments": 38,
-  "sheet": "eval/blind/rounds/round4/answers.csv",
+  "sheet": "eval/blind/model_check/answers.csv",
   "wilson95_ci": [
     0.7587,
     0.9583

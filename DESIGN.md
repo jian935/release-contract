@@ -108,9 +108,14 @@ Failing loudly is cheaper than a post-incident archaeology session.
 
 ## Open questions the blind rounds exposed
 
-Both came from round 2 and neither is patched to match the reader. They are
-listed here because *changing them would invalidate every published round*, so
-they need a deliberate decision and a full re-run, not a quiet edit.
+The first two came from round 2 and neither is patched to match the reader. They
+are listed here because *changing them would invalidate every published round*,
+so they need a deliberate decision and a full re-run, not a quiet edit.
+
+A third came later, from a model cross-check on new cases. It is the cheapest to
+change and the weakest in evidence — and it is where the "do not tune the rule to
+match the annotator" rule bites hardest, because adopting it would take that
+check to 38/38.
 
 ### 1. Does an existing human fallback relax the harm ceiling?
 
@@ -161,11 +166,14 @@ they need a deliberate decision and a full re-run, not a quiet edit.
 
 ### 3. Is `degrade` / `rollback` a fallback, and from which harm rank does G4 require one?
 
-- **Evidence:** `rounds/round4` — the first round on the second case set. One
-  reader, four disagreements, all `FENCE` against the engine's `AUTO`, all on
-  this question: `nb-01` (medium harm, no fallback), `nb-07` and `nb-08` (high
-  harm with `degrade` / `rollback` and a 0.6 review cost), `nb-11` (critical harm
-  with `degrade`).
+- **Evidence:** `eval/blind/model_check/` — a **language model** answered the
+  second case set. Four disagreements, all `FENCE` against the engine's `AUTO`,
+  all on this question: `nb-01` (medium harm, no fallback), `nb-07` and `nb-08`
+  (high harm with `degrade` / `rollback` and a 0.6 review cost), `nb-11`
+  (critical harm with `degrade`). This is **not** a human round and is kept out
+  of `rounds/`: the model's rationales compute the Wilson bound, so it is
+  reproducing the rule rather than judging a release. It is cited here because
+  the four cases, not because of who answered them.
 - **Position today:** G4 fires only when harm is `high` or above *and* fallback is
   exactly `none`; `degrade` and `rollback` count as contained damage. G5 loads
   `human_review_cost` only for `fallback=human`, so a degrade segment carrying a
@@ -181,13 +189,14 @@ they need a deliberate decision and a full re-run, not a quiet edit.
   segments in rounds 1–3 and **1** here (`nb-01`); counting degrade/rollback as
   no fallback flips **1** (`ho-010/at_ceiling`) and **3** (`nb-07`, `nb-08`,
   `nb-11`). Recomputed from the sheets; neither change is implemented.
-- **Why it is not adopted on this evidence:** adopting both would make round 4
-  agree **38/38**. A rule tuned until it matches the person who annotated it
-  validates nothing — the 1.0000 would be an artefact of the edit, not a
-  measurement.
-- **Evidence strength:** weaker than questions 1 and 2. Those have three readers
-  on the same cases; this has one reader on cases chosen to probe it. It is a
-  question raised, not a position won.
+- **Why it is not adopted on this evidence:** adopting both would make that sheet
+  agree **38/38**. A rule tuned until it matches whoever answered it validates
+  nothing — the 1.0000 would be an artefact of the edit, not a measurement.
+- **Evidence strength:** the weakest of the three. Questions 1 and 2 have three
+  human readers on the same cases; this has one model, on cases chosen to probe
+  exactly this. It is a question raised, not a position won. A human round on
+  `next_batch/` would settle whether people read it the same way — the model's
+  agreement is not a substitute.
 
 Two readers out of three now dissent on both questions, in the same direction,
 and they reached it independently (round 3 used the point estimate, round 2 the

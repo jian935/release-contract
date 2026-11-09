@@ -641,6 +641,67 @@ def run_checks() -> list[Check]:
         )
     )
 
+    # 21. A model's answers must never pass as a human blind round. The
+    #     cross-check is kept, and must recompute, but it carries `kind` and an
+    #     annotator string that say "model" -- otherwise the repository would be
+    #     quietly counting a model as a fourth reader.
+    mc_dir = ROOT / "eval" / "blind" / "model_check"
+    mc_sheet = mc_dir / "answers.csv"
+    mc_frozen = mc_dir / "result.json"
+    if mc_sheet.exists() and mc_frozen.exists():
+        mc_result = json.loads(_read(mc_frozen))
+        mc_spec = importlib.util.spec_from_file_location(
+            "blind_eval_model_check", ROOT / "scripts" / "blind_eval.py"
+        )
+        mc_mod = importlib.util.module_from_spec(mc_spec)
+        mc_spec.loader.exec_module(mc_mod)
+        mc_declared = mc_result.get("prompts")
+        mc_live = mc_mod.run(
+            mc_sheet, (ROOT / mc_declared) if mc_declared else None
+        )
+        mc_drift = [
+            key
+            for key in ("agreement", "correct", "scored_segments")
+            if mc_result.get(key) != mc_live.get(key)
+        ]
+        mc_rate = "%.4f" % mc_result["agreement"]
+        mc_unquoted = [
+            name
+            for name, text in (
+                ("README.md", en),
+                ("README.zh-CN.md", zh),
+                ("eval/blind/README.md", blind_readme),
+            )
+            if mc_rate not in text
+        ]
+        mc_note = (mc_result.get("annotator") or "").lower()
+        mc_labelled = (
+            mc_result.get("kind") == "model_check"
+            and "model" in mc_note
+            and "reader" not in mc_note
+        )
+        checks.append(
+            _check(
+                "model_check_labelled_and_reproducible",
+                mc_labelled and not mc_drift and not mc_unquoted,
+                "kind=%s labelled=%s drift=%s unquoted=%s"
+                % (
+                    mc_result.get("kind"),
+                    mc_labelled,
+                    mc_drift or "none",
+                    mc_unquoted or "none",
+                ),
+            )
+        )
+    else:
+        checks.append(
+            _check(
+                "model_check_labelled_and_reproducible",
+                True,
+                "no model cross-check present",
+            )
+        )
+
     # 19. The README animation must be derivable from the current engine.
     #     A hash sidecar is used instead of re-rendering the GIF, so this check
     #     needs no Pillow and runs on every CI interpreter. A screenshot that

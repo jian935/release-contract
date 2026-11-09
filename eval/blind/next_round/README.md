@@ -9,8 +9,10 @@ questions at 2 to 1, and every disagreement in 37 has been accounted for. A
 fourth reader on these exact cases adds a band point and very little
 information. The next round worth running is **new cases nobody has seen** —
 that is the only thing that can reveal a rule question the current 50 cases do
-not contain. That packet exists: see `../next_batch/`, and round 4 is published
-on it in `../rounds/round4/`. Do not re-use this sheet for a fourth round.
+not contain. That packet exists: see `../next_batch/`. A **model** has already
+answered it (`../model_check/`), which is not a human round; no person has yet,
+so `rounds/round4` is still empty on purpose. Do not re-use this sheet for a
+fourth round.
 
 ## Admission rules (read before opening the sheet)
 
