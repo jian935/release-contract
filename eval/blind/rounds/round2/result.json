@@ -1,0 +1,48 @@
+{
+  "agreement": 0.9403,
+  "annotated_cases": 50,
+  "annotator": "one independent reader: declared no prior exposure to this repository, its engine output, or the round-1 answers; applied a Wilson lower bound of their own accord",
+  "compared_with": "engine verdicts, not author-written golden labels",
+  "correct": 63,
+  "date": "2026-11-09",
+  "disagreement_causes": {
+    "other_gate_or_judgement": 4
+  },
+  "disagreements": [
+    {
+      "annotator": "AUTO",
+      "case": "dev-008",
+      "cause": "other_gate_or_judgement",
+      "engine": "FENCE",
+      "segment": "high_harm"
+    },
+    {
+      "annotator": "AUTO",
+      "case": "dev-009",
+      "cause": "other_gate_or_judgement",
+      "engine": "FENCE",
+      "segment": "critical_harm"
+    },
+    {
+      "annotator": "FENCE",
+      "case": "dev-020",
+      "cause": "other_gate_or_judgement",
+      "engine": "HOLD",
+      "segment": "everything_wrong"
+    },
+    {
+      "annotator": "FENCE",
+      "case": "ho-020",
+      "cause": "other_gate_or_judgement",
+      "engine": "HOLD",
+      "segment": "ten_only"
+    }
+  ],
+  "round": 2,
+  "scored_segments": 67,
+  "sheet": "eval/blind/rounds/round2/answers.csv",
+  "wilson95_ci": [
+    0.8563,
+    0.9765
+  ]
+}

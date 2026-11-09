@@ -213,11 +213,12 @@ python -m release_contract.cli version   # print version
 - The two bundled eval sets are **fabricated**, written by the rule author.
   Their perfect scores are a rule-consistency check, not real-world
   effectiveness. See `eval/README.md`.
-- Blind round 1 is published: **agreement 0.8507, Wilson 95% [0.7466, 0.9169]**
-  over 67 segments against an independent reader. All ten disagreements are
-  the Wilson gate, and none is a case of releasing traffic the reader would
-  fence. Read it as a measured conservative bias, not accuracy:
-  `eval/blind/rounds/round1/README.md`.
+- Two blind rounds are published, each with the sheet it was scored from:
+  **0.8507** [0.7466, 0.9169] from the first reader, **0.9403** [0.8563, 0.9765]
+  from a second. Reader-vs-reader agreement on the same 67 segments is 0.791
+  raw / Cohen's kappa 0.6554, so quote the pair, never one alone. Round 1's
+  disagreements were all gate G2; round 2's four are two open rule questions in
+  `DESIGN.md`. Details: `eval/blind/rounds/round1/` and `rounds/round2/`.
 - `scripts/property_scan.py` checks eight invariants over a fixed-seed
   parameter space without any golden label (traffic accounting, replay,
   Wilson and ablation monotonicity, invalid input, segment order, "more

@@ -5,6 +5,19 @@ not measured is marked as such.
 
 ## Unreleased
 
+- Published blind round 2 under `eval/blind/rounds/round2/`: sheet, frozen
+  result, and a record of the four disagreements. Agreement **0.9403**, Wilson
+  95% [0.8563, 0.9765] over the same 67 segments, from a second independent
+  reader. Reader-vs-reader agreement is 0.791 raw / Cohen's kappa 0.6554, so the
+  two rates are now always quoted together.
+- Round 2's reader applied a Wilson lower bound unprompted; 12 rationales quote
+  it and all 12 match `wilson_lower` within 0.05pp. G2 is therefore no longer the
+  contested gate — the remaining four disagreements are rule precedence
+  (fallback vs harm ceiling; `HOLD` vs `FENCE` when evidence is thin *and* a hard
+  ceiling is violated), written up as open questions in `DESIGN.md`.
+- The published-round self-check now requires **every** round's rate to be
+  quoted in all three public docs, not just the newest one, so a better number
+  cannot bury a worse one.
 - Added `assets/demo-recording.gif`: a real screen capture of one run (26 s,
   800px, console window only) with `assets/demo-recording.json` holding its
   SHA-256, the host and exactly what was scaled. A new self-check fails when the

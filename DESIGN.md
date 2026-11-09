@@ -106,6 +106,47 @@ Silent defaults are how a contract quietly becomes evidence-free: `n=0` still
 produces a verdict, and an `AUTO` on a misspelled field would look legitimate.
 Failing loudly is cheaper than a post-incident archaeology session.
 
+## Open questions the blind rounds exposed
+
+Both came from round 2 and neither is patched to match the reader. They are
+listed here because *changing them would invalidate every published round*, so
+they need a deliberate decision and a full re-run, not a quiet edit.
+
+### 1. Does an existing human fallback relax the harm ceiling?
+
+- **Evidence:** `rounds/round2` dev-008 and dev-009. The reader saw `harm=high`
+  (and `critical`) against a `medium` ceiling, noticed a human fallback was
+  configured, and answered `AUTO`; the engine answers `FENCE` via G3.
+- **Position today:** the ceiling is absolute. It describes how bad being wrong
+  is; a fallback changes who catches it, not how bad it is.
+- **Counter-position:** if every error is caught by a human anyway, the realised
+  harm may be `low`, and refusing outright over-blocks a segment that could
+  safely run at reduced automation.
+- **What would settle it:** a launch where fenced-but-fallback segments show a
+  materially different realised harm than their declared `harm_if_wrong`. Then
+  either G3 gains a `fallback_adjusted_harm` input or the docs stop calling the
+  ceiling absolute.
+
+### 2. When evidence is thin *and* a hard ceiling is violated, `HOLD` or `FENCE`?
+
+- **Evidence:** `rounds/round2` dev-020 and ho-020. `n=50` (and `n=10`) against a
+  `min_sample_size` of 100, *plus* a critical harm with no fallback. G1 fires
+  first, so the engine says `HOLD`; the reader said `FENCE`.
+- **Why the reader may be right:** more data cannot fix an absolute ceiling
+  violation. Telling someone `HOLD` sends them off to collect samples that cannot
+  change the answer.
+- **Why the ordering exists:** `HOLD` is defined as "the evidence cannot support
+  a verdict", and a 50-sample segment genuinely cannot. Reporting a hard gate the
+  sample size makes unmeasurable is a different claim.
+- **Cost of changing:** verdict precedence touches every gate combination. All
+  50 golden cases would need re-deriving, and both published rounds would need
+  re-scoring — at which point the published numbers change and the changelog has
+  to say so.
+
+Neither question justifies changing the engine on the strength of one reader.
+The second one does justify a documentation fix, which is in place: `HOLD` is
+described as "not enough evidence", never as "safe to ship".
+
 ## What would change these decisions
 
 - **G2:** a real launch history showing that segments which cleared the

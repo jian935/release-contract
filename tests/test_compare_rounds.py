@@ -71,6 +71,25 @@ class TestCompare(unittest.TestCase):
         self.assertTrue(d["reader_a"] == "AUTO" and d["reader_b"] == "FENCE")
         self.assertTrue(d["engine"] == "FENCE")
 
+    def test_published_rounds_are_comparable(self):
+        """Integration: the two shipped rounds must stay pairable.
+
+        Structural assertions only — no rate or kappa value is pinned here, so
+        adding a third round or re-scoring does not fail the build.
+        """
+        from pathlib import Path
+
+        root = Path(__file__).resolve().parents[1]
+        a = root / "eval" / "blind" / "rounds" / "round1" / "answers.csv"
+        b = root / "eval" / "blind" / "rounds" / "round2" / "answers.csv"
+        result = self.mod.compare(a, b)
+        self.assertTrue(result["paired_segments"] > 0)
+        self.assertTrue(-1.0 <= result["cohens_kappa"] <= 1.0)
+        self.assertTrue(0.0 <= result["agreement"] <= 1.0)
+        self.assertTrue(result["a_vs_engine"]["segments"] == result["paired_segments"])
+        self.assertTrue(result["b_vs_engine"]["segments"] == result["paired_segments"])
+        self.assertTrue(set(result["label_counts"]) == {"AUTO", "FENCE", "HOLD"})
+
     def test_no_shared_segment_is_an_error(self):
         a = self._write("a.csv", [("dev-001", "thin", "HOLD")])
         b = self._write("b.csv", [("dev-002", "almost", "HOLD")])

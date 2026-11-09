@@ -17,6 +17,19 @@ TEXT_SUFFIXES = {
     ".py", ".md", ".json", ".jsonl", ".yml", ".yaml", ".txt", ".cfg", ".toml",
 }
 SKIP_DIRS = {".git", "__pycache__", ".local", ".pytest_cache", ".venv", "venv"}
+
+# Numbers an annotator must never see before deciding. Kept in one place: the
+# lists used to be duplicated per check, and a newly published rate was added to
+# only one of them.
+SCORE_LEAKS = (
+    "1.0000",  # self-built suites
+    "0.8928",
+    "0.9011",
+    "0.8507",  # blind round 1
+    "0.7466",
+    "0.9403",  # blind round 2
+    "0.8563",
+)
 PERSONAL_EMAIL = re.compile(
     r"\b[\w.+-]+@(?:qq|163|126|gmail|outlook|foxmail|sina|sohu)\.com\b", re.I
 )
@@ -351,21 +364,22 @@ def run_checks() -> list[Check]:
             rates.append((folder.name, "%.4f" % live["agreement"]))
 
     if rates:
-        latest_name, latest_rate = rates[-1]
         docs = {
             "README.md": en,
             "README.zh-CN.md": zh,
             "eval/blind/README.md": blind_readme,
         }
+        # Every published round must stay quoted, not just the newest one.
+        # A newer, better number must not be allowed to bury an older, worse one.
         for name, text in docs.items():
-            if latest_rate not in text:
-                problems.append(
-                    "%s does not quote the published rate %s from %s"
-                    % (name, latest_rate, latest_name)
-                )
-        detail = "rounds=%s; quoted rate=%s; problems=%s" % (
+            for round_name, rate in rates:
+                if rate not in text:
+                    problems.append(
+                        "%s does not quote the published rate %s from %s"
+                        % (name, rate, round_name)
+                    )
+        detail = "rounds=%s; problems=%s" % (
             [name for name, _ in rates],
-            latest_rate,
             problems or "none",
         )
         ok = not problems
@@ -430,7 +444,7 @@ def run_checks() -> list[Check]:
     score_leaks = [
         text
         for text in (ws_text, tpl_text, guide_text)
-        if any(s in text for s in ("1.0000", "0.8928", "0.9011"))
+        if any(s in text for s in SCORE_LEAKS)
     ]
     in_sync = ws_text == rebuilt_ws and tpl_text == rebuilt_tpl
     checks.append(
@@ -456,7 +470,7 @@ def run_checks() -> list[Check]:
         r for r in single_rows if (r.get("你的判定") or "").strip()
     ]
     single_leaks = any(
-        s in single_text for s in ("1.0000", "0.8928", "0.9011")
+        s in single_text for s in SCORE_LEAKS
     )
     checks.append(
         _check(
@@ -488,7 +502,7 @@ def run_checks() -> list[Check]:
         next_rows = list(csv.DictReader(io.StringIO(next_text)))
         next_filled = [r for r in next_rows if (r.get("你的判定") or "").strip()]
         next_leaks = any(
-            s in next_text for s in ("1.0000", "0.8928", "0.9011", "0.8507")
+            s in next_text for s in SCORE_LEAKS
         )
         next_synced = next_text == rebuilt_single
     checks.append(
