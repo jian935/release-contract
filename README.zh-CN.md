@@ -125,9 +125,11 @@ TRAFFIC (denominator = full traffic 1.0)
 
 两项检查不依赖作者写的 golden 标注：
 
-- `python scripts/property_scan.py` 用固定 seed 扫描参数空间，验证不变量：
-  流量核算、逐字节复跑、Wilson 单调性、消融单调性、非法输入必拒。
-  违规就是真 bug，不是标注分歧。
+- `python scripts/property_scan.py` 用固定 seed 扫描参数空间，验证八条不变量：
+  流量核算、逐字节复跑、Wilson 单调性、消融单调性、非法输入必拒、
+  分片顺序无关、「成功数变多不会更严」、「下限抬高不会放宽」。
+  违规就是真 bug，不是标注分歧。扫描器本身用**植入 bug**的单测验证过
+  （`tests/test_properties.py`），所以「静默通过」不等于「检查从不触发」。
 - `python scripts/blind_eval.py` 用 `eval/blind/` 里去掉答案的题面，
   把独立标注者与引擎判定对比。协议见 `eval/blind/README.md`。
   填好 `answer_sheet.template.csv` 后把 CSV 路径传给脚本；未决行跳过，不猜。

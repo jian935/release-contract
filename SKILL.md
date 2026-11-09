@@ -216,9 +216,12 @@ python -m release_contract.cli version   # print version
   the Wilson gate, and none is a case of releasing traffic the reader would
   fence. Read it as a measured conservative bias, not accuracy:
   `eval/blind/rounds/round1/README.md`.
-- `scripts/property_scan.py` checks invariants over a fixed-seed parameter
-  space without any golden label. It finds bugs; it cannot judge whether the
-  gates reflect good product judgement.
+- `scripts/property_scan.py` checks eight invariants over a fixed-seed
+  parameter space without any golden label (traffic accounting, replay,
+  Wilson and ablation monotonicity, invalid input, segment order, "more
+  successes never stricter", "higher floor never looser"). It finds bugs; it
+  cannot judge whether the gates reflect good product judgement. The scanner
+  is itself tested with planted bugs, so a pass means the checks fire.
 - No real launch data, no real users, no external annotation, and no measured
   accuracy for the evidence-risk flags exist in this project.
 - This does not tell you whether your eval was well designed. A curated test

@@ -57,3 +57,48 @@ class TestInvariants(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestScannerHasTeeth(unittest.TestCase):
+    """An invariant check that can never fail is decoration.
+
+    Each test feeds `scan` a deliberately broken decider and requires a
+    violation. If these pass, the scanner would notice a real regression.
+    """
+
+    def _broken(self, bug):
+        from dataclasses import replace
+
+        def decider(contract, *args, **kwargs):
+            decision = decide(contract, *args, **kwargs)
+            return replace(decision, segments=bug(contract, decision))
+
+        return decider
+
+    def test_catches_verdicts_that_depend_on_segment_order(self):
+        from dataclasses import replace
+
+        def bug(contract, decision):
+            segs = list(decision.segments)
+            if segs:
+                flip = "HOLD" if segs[0].verdict == AUTO else AUTO
+                segs[0] = replace(segs[0], verdict=flip)
+            return tuple(segs)
+
+        result = scan(trials=40, decide_fn=self._broken(bug))
+        self.assertTrue(any("segment order" in v for v in result["violations"]))
+
+    def test_catches_more_successes_making_a_verdict_stricter(self):
+        from dataclasses import replace
+
+        def bug(contract, decision):
+            perfect = {s.id for s in contract.segments if s.n > 0 and s.successes == s.n}
+            return tuple(
+                replace(s, verdict=HOLD) if s.id in perfect else s
+                for s in decision.segments
+            )
+
+        result = scan(trials=40, decide_fn=self._broken(bug))
+        self.assertTrue(
+            any("more successes" in v for v in result["violations"])
+        )

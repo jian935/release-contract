@@ -10,6 +10,7 @@ Fixed seed -> reproducible. No third-party dependencies.
 from __future__ import annotations
 
 import random
+from dataclasses import replace
 from typing import Any
 
 from .engine import (
@@ -66,7 +67,18 @@ def _random_contract(rng: random.Random) -> Contract:
     )
 
 
-def scan(seed: int = DEFAULT_SEED, trials: int = DEFAULT_TRIALS) -> dict[str, Any]:
+def scan(
+    seed: int = DEFAULT_SEED,
+    trials: int = DEFAULT_TRIALS,
+    decide_fn: Any = None,
+) -> dict[str, Any]:
+    """`decide_fn` exists so a test can plant a bug and prove the scan sees it.
+
+    An invariant check that cannot fail is decoration; `tests/test_properties.py`
+    feeds this scanner a deliberately order-dependent decider and expects a
+    violation.
+    """
+    decide_fn = decide_fn or decide
     rng = random.Random(seed)
     violations: list[str] = []
     checked = {name: 0 for name in (
@@ -75,11 +87,15 @@ def scan(seed: int = DEFAULT_SEED, trials: int = DEFAULT_TRIALS) -> dict[str, An
         "P3_wilson_monotonic",
         "P4_ablation_monotonic",
         "P5_invalid_input_rejected",
+        "P6_segment_order_invariance",
+        "P7_more_successes_never_stricter",
+        "P8_higher_floor_never_looser",
     )}
+    rank = {"AUTO": 0, "FENCE": 1, "HOLD": 2}
 
     for i in range(trials):
         c = _random_contract(rng)
-        d = decide(c)
+        d = decide_fn(c)
 
         # P1: four buckets always account for the full traffic.
         buckets = ("auto", "fence", "hold", "uncovered")
@@ -93,8 +109,8 @@ def scan(seed: int = DEFAULT_SEED, trials: int = DEFAULT_TRIALS) -> dict[str, An
             "guardrails": dict(c.guardrails.__dict__),
             "segments": [dict(s.__dict__) for s in c.segments],
         }
-        a = to_json(decide(contract_from_dict(raw)))
-        b = to_json(decide(contract_from_dict(raw)))
+        a = to_json(decide_fn(contract_from_dict(raw)))
+        b = to_json(decide_fn(contract_from_dict(raw)))
         if a != b:
             violations.append("trial %d: replay is not byte-identical" % i)
         checked["P2_deterministic_replay"] += 1
@@ -113,7 +129,7 @@ def scan(seed: int = DEFAULT_SEED, trials: int = DEFAULT_TRIALS) -> dict[str, An
         # P4: disabling a gate can only make the decision more permissive.
         base_auto = sum(1 for s in d.segments if s.verdict == AUTO)
         for gate in SEGMENT_GATES:
-            ablated = decide(c, frozenset({gate}))
+            ablated = decide_fn(c, frozenset({gate}))
             abl_auto = sum(1 for s in ablated.segments if s.verdict == AUTO)
             if abl_auto < base_auto:
                 violations.append(
@@ -135,6 +151,51 @@ def scan(seed: int = DEFAULT_SEED, trials: int = DEFAULT_TRIALS) -> dict[str, An
         except ContractError:
             pass
         checked["P5_invalid_input_rejected"] += 1
+
+        # P6: the order segments were written in cannot change their verdicts.
+        shuffled = replace(c, segments=tuple(reversed(c.segments)))
+        shuffled_d = decide_fn(shuffled)
+        if {s.id: s.verdict for s in shuffled_d.segments} != {
+            s.id: s.verdict for s in d.segments
+        }:
+            violations.append("trial %d: verdicts depend on segment order" % i)
+        if shuffled_d.traffic != d.traffic:
+            violations.append("trial %d: traffic totals depend on segment order" % i)
+        checked["P6_segment_order_invariance"] += 1
+
+        # P7: with n fixed, more successes can never make a verdict stricter.
+        # A gate that moves the wrong way here is a bug, not a judgement call.
+        for seg in c.segments:
+            if seg.successes >= seg.n:
+                continue
+            better = replace(c, segments=tuple(
+                replace(s, successes=s.n) if s.id == seg.id else s for s in c.segments
+            ))
+            before = {s.id: s.verdict for s in d.segments}[seg.id]
+            after = {s.id: s.verdict for s in decide_fn(better).segments}[seg.id]
+            if rank[after] > rank[before]:
+                violations.append(
+                    "trial %d: segment %s got stricter with more successes (%s -> %s)"
+                    % (i, seg.id, before, after)
+                )
+        checked["P7_more_successes_never_stricter"] += 1
+
+        # P8: raising the success floor can only tighten, never loosen.
+        stricter = replace(
+            c,
+            guardrails=replace(
+                c.guardrails,
+                min_success_rate=min(1.0, c.guardrails.min_success_rate + 0.05),
+            ),
+        )
+        before_map = {s.id: s.verdict for s in d.segments}
+        for s in decide_fn(stricter).segments:
+            if rank[s.verdict] < rank[before_map[s.id]]:
+                violations.append(
+                    "trial %d: raising min_success_rate loosened %s (%s -> %s)"
+                    % (i, s.id, before_map[s.id], s.verdict)
+                )
+        checked["P8_higher_floor_never_looser"] += 1
 
     return {
         "seed": seed,

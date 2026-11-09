@@ -140,9 +140,12 @@ tests that prove each gate is load-bearing. Treat that table as a
 Two checks do not depend on author-written golden labels:
 
 - `python scripts/property_scan.py` scans a fixed-seed parameter space and
-  asserts invariants: traffic accounting, byte-identical replay, Wilson
-  monotonicity, ablation monotonicity and invalid-input rejection. A
-  violation is a bug, not a disagreeing label.
+  asserts eight invariants: traffic accounting, byte-identical replay, Wilson
+  monotonicity, ablation monotonicity, invalid-input rejection, segment-order
+  invariance, "more successes never stricter", and "higher floor never
+  looser". A violation is a bug, not a disagreeing label. The scan itself is
+  tested with planted bugs (`tests/test_properties.py`), so a silent pass
+  cannot mean "the checks never fire".
 - `python scripts/blind_eval.py` compares an independent annotator with the
   engine using answer-free prompts in `eval/blind/`. See
   `eval/blind/README.md` for the protocol. Fill

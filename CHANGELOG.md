@@ -26,6 +26,12 @@ not measured is marked as such.
   and `pyproject.toml`; the self-check fails otherwise.
 - `SKILL.md` rewritten as an agent runbook: four-step workflow, field table
   with ranges and enums, exit-code table, troubleshooting table.
+- Added `DESIGN.md`: each decision paired with the alternative it beat and the
+  evidence that would reopen it.
+- Property scan grew from five to eight invariants: segment-order invariance,
+  "more successes never make a verdict stricter", and "raising
+  `min_success_rate` never loosens a verdict". The scanner now accepts an
+  injected decider so tests can plant a bug and prove the checks fire.
 - Blind round 1 published under `eval/blind/rounds/round1/`: sheet, frozen
   result and a self-check that recomputes the published rate from the sheet
   and fails on drift. Agreement 0.8507, Wilson 95% [0.7466, 0.9169] over 67
