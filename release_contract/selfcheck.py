@@ -573,6 +573,43 @@ def run_checks() -> list[Check]:
         )
     )
 
+    # 21. The launch example must stay synthetic, in sync with its generator, and
+    #     actually illustrate a trigger. An example that silently stops firing is
+    #     worse than no example: it looks like the check passes.
+    gen_spec = importlib.util.spec_from_file_location(
+        "gen_launch_example", ROOT / "scripts" / "gen_launch_example.py"
+    )
+    gen_mod = importlib.util.module_from_spec(gen_spec)
+    gen_spec.loader.exec_module(gen_mod)
+    shipped_log = _read(ROOT / "examples" / "launch" / "run_log.jsonl")
+    launch_readme = _read(ROOT / "examples" / "launch" / "README.md")
+    from .engine import decide as _decide, load_contract as _load
+    from .launch import evaluate as _evaluate
+
+    drift = _evaluate(
+        _decide(_load(str(ROOT / "examples" / "demo_contract.json"))),
+        shipped_log,
+        100,
+    )
+    example_ok = (
+        bool(shipped_log)
+        and shipped_log == gen_mod.build()
+        and "SYNTHETIC" in launch_readme
+        and drift["triggered"] == ["routine_faq"]
+    )
+    checks.append(
+        _check(
+            "launch_example_synthetic_and_firing",
+            example_ok,
+            "in_sync=%s synthetic_label=%s triggered=%s"
+            % (
+                shipped_log == gen_mod.build(),
+                "SYNTHETIC" in launch_readme,
+                drift["triggered"] or "none",
+            ),
+        )
+    )
+
     return checks
 
 

@@ -151,6 +151,11 @@ TRAFFIC (denominator = full traffic 1.0)
 - `python scripts/logs_to_counts.py run.jsonl -o counts.csv` 把运行时日志
   （每行 `{"segment": "...", "ok": true}`）转成 `import` 直接吃的计数 CSV。
   **没有结果的记录会从 `n` 里剔除并单独计数**，绝不当成失败。
+- `python scripts/check_rollback_baseline.py contract.json run_log.jsonl` 是
+  「回退触发条件」的另一半：拿上线后的日志，逐窗口对照 `decide` 当初记下的基线。
+  **不完整的窗口永不触发**、正常窗口会把连续计数清零、日志里从未出现的分片报
+  `no observations` 而不是当作健康。`--fail-on-trigger` 触发时退出码 2，可接流水线。
+  完整示例见 `examples/launch/`。
 - `python scripts/demo.py` 带停顿重放整套流程，方便录屏；打印的全是真实输出，没有脚本台词。
 
 **盲评已发布两轮，每轮都带填好的表。** 第 1 轮一致率 **0.8507**，Wilson 95%
@@ -183,6 +188,9 @@ TRAFFIC (denominator = full traffic 1.0)
 
 - 没有真实上线数据、没有真实用户、没有真实模型输出、没有外部标注。
   证据风险标记与真实上线结果都没有实测准确率。
+- 回退自检已经有了，但只在**编造的**日志上跑过（`examples/launch/`）。
+  「记录的 Wilson 基线能否预测某个已放行分片的真实漂移率」还没有任何人验证过——
+  这是目前最缺、也最有用的一个测量。
 - 两位标注者不构成「标注者分布」：kappa 0.6554 是一个点，没有区间；而且两人回答的是
   同一批 67 个**编造**的用例。
 - 引擎在同类数字上**明知比点估计更保守**：点估计过线而 Wilson 下界不过线的分片会被拦。

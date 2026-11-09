@@ -35,6 +35,11 @@ FENCE = "FENCE"
 HOLD = "HOLD"
 _STRICTNESS: dict[str, int] = {AUTO: 0, FENCE: 1, HOLD: 2}
 
+# How many consecutive observation windows must fall below the recorded baseline
+# before an AUTO segment is considered to have drifted. Single source of truth:
+# the report text and `release_contract.launch` both read it from here.
+ROLLBACK_CONSECUTIVE_WINDOWS = 2
+
 # Five per-segment gates plus one global coverage gate.
 SEGMENT_GATES: tuple[str, ...] = (
     "G1_SAMPLE",
@@ -322,9 +327,10 @@ def _rollback_triggers(
             {
                 "segment": seg.id,
                 "baseline_wilson_lower": baseline,
+                "consecutive_windows": ROLLBACK_CONSECUTIVE_WINDOWS,
                 "trigger": (
-                    "observed success rate below %.4f for 2 consecutive windows"
-                    % baseline
+                    "observed success rate below %.4f for %d consecutive windows"
+                    % (baseline, ROLLBACK_CONSECUTIVE_WINDOWS)
                 ),
                 "action": (
                     "route this segment to %s, then re-open its evidence review"

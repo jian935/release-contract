@@ -70,6 +70,18 @@ It needs `id`, `n`, `successes`; `volume_share`, `harm_if_wrong`, `fallback`,
 refused on purpose — a rate without its denominator cannot be audited, and an
 unknown column is an error so a typo cannot become a silent default.
 
+After the launch, close the loop on the trigger `decide` recorded:
+
+```bash
+python scripts/check_rollback_baseline.py contract.json run_log.jsonl \
+  --window-size 200 --fail-on-trigger     # exit 2 if an AUTO segment drifted
+```
+
+Log one `{"segment": "...", "ok": true|false}` line per handled case, in order.
+A case with no outcome may omit `ok`: it is skipped and counted, never treated
+as a failure. A partial window never fires, and a segment absent from the log is
+reported as `no observations` rather than looking healthy.
+
 ## Contract schema
 
 ```json
@@ -202,6 +214,7 @@ python -m release_contract.cli version   # print version
 | `release_contract/diff.py` | version-to-version segment diff |
 | `release_contract/properties.py` | invariant scan that needs no golden labels |
 | `examples/` | fabricated demo contracts (labelled SYNTHETIC) |
+| `examples/launch/` | synthetic runtime log and the post-launch baseline check, wired end to end |
 | `assets/demo-recording.gif` | a real screen capture of one demo run; `assets/demo-recording.json` carries its hash |
 | `assets/demo.gif` | the README animation, rendered from live stdout by `scripts/render_demo_gif.py` (not a screen capture) |
 | `eval/` | self-built dev/hold-out suites and the blind protocol |
@@ -226,7 +239,9 @@ python -m release_contract.cli version   # print version
   cannot judge whether the gates reflect good product judgement. The scanner
   is itself tested with planted bugs, so a pass means the checks fire.
 - No real launch data, no real users, no external annotation, and no measured
-  accuracy for the evidence-risk flags exist in this project.
+  accuracy for the evidence-risk flags exist in this project. The post-launch
+  baseline check runs only on a fabricated log; whether a recorded Wilson
+  baseline predicts real drift is unmeasured.
 - This does not tell you whether your eval was well designed. A curated test
   set that hides messy edge cases still produces green verdicts — that is what
   the Goodhart flags are for.

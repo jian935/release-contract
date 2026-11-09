@@ -174,6 +174,12 @@ Two checks do not depend on author-written golden labels:
   logs (`{"segment": "...", "ok": true}` per line) into the counts CSV that
   `import` consumes. A record with no outcome is excluded from `n` and
   reported, never counted as a failure.
+- `python scripts/check_rollback_baseline.py contract.json run_log.jsonl` closes
+  the loop the trigger promise opens: it replays the launch's own log against the
+  baselines `decide` recorded, window by window. A partial window never fires, a
+  healthy window resets the run, and a segment that never appears in the log is
+  reported as `no observations` instead of looking healthy. `--fail-on-trigger`
+  exits 2 for a pipeline. Worked example: `examples/launch/`.
 - `python scripts/demo.py` replays the whole flow with pauses, for a screen
   recording. It prints real output; nothing in it is scripted prose.
 
@@ -215,6 +221,10 @@ been measured.
 - No real launch data, no real users, no real model output, no external
   annotation. There is no measured accuracy for evidence-risk flags or for
   real launch outcomes.
+- The rollback check exists and is exercised on a **fabricated** log
+  (`examples/launch/`). Nobody has yet shown that a recorded Wilson baseline
+  predicts the real drift rate of a shipped segment — that is the single most
+  useful measurement still missing.
 - Two annotators is not a sample of annotators: kappa 0.6554 is a single number
   with no interval, and both readers answered the same 67 fabricated cases.
 - The engine is knowingly more conservative than a point-estimate read of the
