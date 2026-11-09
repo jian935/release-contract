@@ -37,6 +37,13 @@ not measured is marked as such.
   and fails on drift. Agreement 0.8507, Wilson 95% [0.7466, 0.9169] over 67
   segments; all ten disagreements are the Wilson gate and none runs in the
   dangerous direction.
+- Added `scripts/compare_rounds.py`: inter-annotator agreement (raw + Cohen's
+  kappa) on the segments two rounds share, so a second reader can tell
+  "conservative tool" apart from "one reader's habit".
+- Added `scripts/logs_to_counts.py`: runtime JSONL (`segment`, `ok`) to the
+  counts CSV that `import` consumes. Records without an outcome are excluded
+  from `n` and reported, never counted as failures.
+- Added `scripts/demo.py`: paced replay of the flow for screen recording.
 
 ## 0.1.0 — 2026-11-08
 

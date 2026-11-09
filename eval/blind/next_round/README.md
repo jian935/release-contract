@@ -59,6 +59,20 @@ Once `rounds/round2/answers.csv` and `result.json` exist, the project
 self-check recomputes the rate from the sheet and fails on drift, exactly as it
 does for round 1.
 
+Then measure whether the two readers share a rule or just a habit:
+
+```bash
+python scripts/compare_rounds.py \
+  eval/blind/rounds/round1/answers.csv \
+  eval/blind/rounds/round2/answers.csv
+```
+
+It reports paired segments, raw agreement, **Cohen's kappa** and each reader's
+agreement with the engine on the same subset. If kappa is near zero, the two
+readers disagree more than chance allows on this label set, and the engine
+comparison stops being informative — that is a finding, not a failure to hide.
+
+
 ## What round 2 can and cannot settle
 
 - **Can:** whether round 1's disagreement pattern is one reader's habit or a

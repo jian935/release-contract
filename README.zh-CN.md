@@ -137,6 +137,13 @@ TRAFFIC (denominator = full traffic 1.0)
   填好 `answer_sheet.template.csv` 后把 CSV 路径传给脚本；未决行跳过，不猜。
 - `python scripts/publish_round.py` 冻结一轮：给填好的表打分并写出 `result.json`，
   结果不同时拒绝覆盖（除非显式 `--force`）。**表不入库的回合不予发布。**
+- `python scripts/compare_rounds.py a.csv b.csv` 算两轮之间在共同分片上的一致性：
+  配对数、原始一致率、**Cohen's kappa**，以及两位读者各自与引擎的一致率。
+  只报原始一致率会美化「两个人都默认 AUTO」这种情况。
+- `python scripts/logs_to_counts.py run.jsonl -o counts.csv` 把运行时日志
+  （每行 `{"segment": "...", "ok": true}`）转成 `import` 直接吃的计数 CSV。
+  **没有结果的记录会从 `n` 里剔除并单独计数**，绝不当成失败。
+- `python scripts/demo.py` 带停顿重放整套流程，方便录屏；打印的全是真实输出，没有脚本台词。
 
 **盲评第 1 轮：一致率 0.8507，Wilson 95% [0.7466, 0.9169]**，覆盖 50 个案子、
 67 个分片；标注者只看题面、不看引擎输出与标准答案。填好的表已入库

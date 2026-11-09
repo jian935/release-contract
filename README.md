@@ -156,6 +156,17 @@ Two checks do not depend on author-written golden labels:
 - `python scripts/publish_round.py` freezes a round: it scores a filled sheet
   and writes `result.json`, refusing to overwrite a different published result
   without `--force`. A round is publishable only when its sheet ships with it.
+- `python scripts/compare_rounds.py a.csv b.csv` reports inter-annotator
+  agreement between two rounds on their shared segments: paired count, percent
+  agreement and **Cohen's kappa**, plus each reader's agreement with the engine
+  on the same subset. Percent agreement alone would flatter two readers who
+  both default to `AUTO`.
+- `python scripts/logs_to_counts.py run.jsonl -o counts.csv` turns runtime
+  logs (`{"segment": "...", "ok": true}` per line) into the counts CSV that
+  `import` consumes. A record with no outcome is excluded from `n` and
+  reported, never counted as a failure.
+- `python scripts/demo.py` replays the whole flow with pauses, for a screen
+  recording. It prints real output; nothing in it is scripted prose.
 
 **Blind round 1: agreement 0.8507, Wilson 95% [0.7466, 0.9169]** over 67
 segments from 50 cases, against an independent reader who saw the inputs only.
