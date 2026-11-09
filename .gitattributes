@@ -6,3 +6,7 @@
 *.csv text eol=lf
 *.json text eol=lf
 *.jsonl text eol=lf
+
+# Binary assets must never be line-ending normalised.
+*.gif binary
+*.png binary
