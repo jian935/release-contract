@@ -289,35 +289,94 @@ def run_checks() -> list[Check]:
         )
     )
 
-    # 14. A blind score may only be published if the annotation input is
-    #     published with it. The sheet is gitignored, so no rate is citable.
+    # 14. A published blind result must be reproducible from its own sheet, and
+    #     the rate quoted in the docs must be that result. A number whose input
+    #     nobody can re-run is the unfalsifiable claim this project rejects.
+    import importlib.util as _ilu
+    import json as _json
+
     blind_readme = _read(ROOT / "eval" / "blind" / "README.md")
-    declaration_en = "no agreement score is published" in en.lower()
-    declaration_zh = "不公布一致率" in zh
-    declaration_blind = "No agreement score is published" in blind_readme
-    published_rate = [
-        name
-        for name, text in (("README.md", en), ("README.zh-CN.md", zh),
-                           ("eval/blind/README.md", blind_readme))
-        if re.search(r"agreement\s*[:=]\s*0\.\d", text, re.I)
-        or re.search(r"一致率\s*[:：=]?\s*0\.\d", text)
-    ]
-    checks.append(
-        _check(
-            "no_blind_score_published",
-            declaration_en
-            and declaration_zh
-            and declaration_blind
-            and not published_rate,
-            "declared en=%s zh=%s blind=%s; published rates=%s"
-            % (
-                declaration_en,
-                declaration_zh,
-                declaration_blind,
-                published_rate or "none",
-            ),
-        )
+    rounds_dir = ROOT / "eval" / "blind" / "rounds"
+    round_dirs = (
+        sorted(p for p in rounds_dir.iterdir() if p.is_dir())
+        if rounds_dir.is_dir()
+        else []
     )
+    problems: list[str] = []
+    rates: list[tuple[str, str]] = []
+
+    if round_dirs:
+        be_spec = _ilu.spec_from_file_location(
+            "blind_eval_selfcheck", ROOT / "scripts" / "blind_eval.py"
+        )
+        be = _ilu.module_from_spec(be_spec)
+        be_spec.loader.exec_module(be)
+        for folder in round_dirs:
+            sheet, frozen = folder / "answers.csv", folder / "result.json"
+            if not sheet.exists() or not frozen.exists():
+                problems.append("%s: missing answers.csv or result.json" % folder.name)
+                continue
+            try:
+                published = _json.loads(_read(frozen))
+            except ValueError as exc:
+                problems.append("%s: result.json is not valid JSON (%s)" % (folder.name, exc))
+                continue
+            live = be.run(sheet)
+            if live["status"] != "measured":
+                problems.append("%s: sheet yields no score" % folder.name)
+                continue
+            for key in (
+                "agreement",
+                "wilson95_ci",
+                "scored_segments",
+                "correct",
+                "annotated_cases",
+                "disagreement_causes",
+                "disagreements",
+            ):
+                if published.get(key) != live.get(key):
+                    problems.append(
+                        "%s/%s drifted: published=%r recomputed=%r"
+                        % (folder.name, key, published.get(key), live.get(key))
+                    )
+            rates.append((folder.name, "%.4f" % live["agreement"]))
+
+    if rates:
+        latest_name, latest_rate = rates[-1]
+        docs = {
+            "README.md": en,
+            "README.zh-CN.md": zh,
+            "eval/blind/README.md": blind_readme,
+        }
+        for name, text in docs.items():
+            if latest_rate not in text:
+                problems.append(
+                    "%s does not quote the published rate %s from %s"
+                    % (name, latest_rate, latest_name)
+                )
+        detail = "rounds=%s; quoted rate=%s; problems=%s" % (
+            [name for name, _ in rates],
+            latest_rate,
+            problems or "none",
+        )
+        ok = not problems
+    else:
+        # Nothing published yet: every public doc must say so, and no doc may
+        # quote a rate.
+        declared = [
+            name
+            for name, text in (
+                ("README.md", en),
+                ("README.zh-CN.md", zh),
+                ("eval/blind/README.md", blind_readme),
+            )
+            if not re.search(r"(agreement\s*[:=]?\s*0\.\d)|(一致率\s*[:：=]?\s*0\.\d)", text, re.I)
+        ]
+        ok = len(declared) == 3 and "No blind evaluation has been run" in en
+        detail = "no published rounds; docs quoting no rate=%d/3" % len(declared)
+
+    checks.append(_check("blind_round_published_and_reproducible", ok, detail))
+
 
 
     # 15. Invariants that do not depend on any golden label.

@@ -103,12 +103,12 @@ They never change a verdict — otherwise the tool could be tuned to look good.
 - The two bundled eval sets are **fabricated**, written by the rule author.
   Their perfect scores are a rule-consistency check, not real-world
   effectiveness. See `eval/README.md`.
-- A blind protocol and answer-free prompts exist in `eval/blind/`. One local
-  round was returned, but **no agreement score is published**: the filled
-  sheet is not in the repository, so the number would be unverifiable. The
-  round's repeatable finding: every disagreement was the Wilson gate (point
-  estimate above the floor, lower bound below it), never a release the
-  annotator would have blocked. Rank it as a conservative bias, not accuracy.
+- Blind round 1 is published: **agreement 0.8507, Wilson 95% [0.7466, 0.9169]**
+  over 67 segments, against an independent reader. All ten disagreements are
+  the Wilson gate (point estimate above the floor, lower bound below it) and
+  none is a case of releasing traffic the reader would fence. Treat it as a
+  measured conservative bias, not as accuracy:
+  `eval/blind/rounds/round1/README.md`.
 - `scripts/property_scan.py` checks invariants over a fixed-seed parameter
   space without using any golden label. It can find bugs; it cannot validate
   whether the gates reflect good product judgement.

@@ -1,0 +1,90 @@
+{
+  "agreement": 0.8507,
+  "annotated_cases": 50,
+  "annotator": "one independent reader (no access to engine output, golden labels or README results)",
+  "compared_with": "engine verdicts, not author-written golden labels",
+  "correct": 57,
+  "date": "2026-11-09",
+  "disagreement_causes": {
+    "wilson_lower_below_floor_but_point_estimate_above": 10
+  },
+  "disagreements": [
+    {
+      "annotator": "AUTO",
+      "case": "dev-004",
+      "cause": "wilson_lower_below_floor_but_point_estimate_above",
+      "engine": "FENCE",
+      "segment": "point_ok"
+    },
+    {
+      "annotator": "AUTO",
+      "case": "dev-005",
+      "cause": "wilson_lower_below_floor_but_point_estimate_above",
+      "engine": "FENCE",
+      "segment": "at_threshold"
+    },
+    {
+      "annotator": "AUTO",
+      "case": "dev-006",
+      "cause": "wilson_lower_below_floor_but_point_estimate_above",
+      "engine": "FENCE",
+      "segment": "large_but_weak"
+    },
+    {
+      "annotator": "AUTO",
+      "case": "dev-007",
+      "cause": "wilson_lower_below_floor_but_point_estimate_above",
+      "engine": "FENCE",
+      "segment": "small_sample"
+    },
+    {
+      "annotator": "AUTO",
+      "case": "dev-016",
+      "cause": "wilson_lower_below_floor_but_point_estimate_above",
+      "engine": "FENCE",
+      "segment": "fenced_part"
+    },
+    {
+      "annotator": "AUTO",
+      "case": "ho-004",
+      "cause": "wilson_lower_below_floor_but_point_estimate_above",
+      "engine": "FENCE",
+      "segment": "thirteen_failures"
+    },
+    {
+      "annotator": "AUTO",
+      "case": "ho-005",
+      "cause": "wilson_lower_below_floor_but_point_estimate_above",
+      "engine": "FENCE",
+      "segment": "weak_evidence"
+    },
+    {
+      "annotator": "AUTO",
+      "case": "ho-006",
+      "cause": "wilson_lower_below_floor_but_point_estimate_above",
+      "engine": "FENCE",
+      "segment": "wide_interval"
+    },
+    {
+      "annotator": "AUTO",
+      "case": "ho-007",
+      "cause": "wilson_lower_below_floor_but_point_estimate_above",
+      "engine": "FENCE",
+      "segment": "five_hundred"
+    },
+    {
+      "annotator": "AUTO",
+      "case": "ho-022",
+      "cause": "wilson_lower_below_floor_but_point_estimate_above",
+      "engine": "FENCE",
+      "segment": "fence"
+    }
+  ],
+  "round": 1,
+  "scored_segments": 67,
+  "sheet": "eval/blind/rounds/round1/answers.csv",
+  "wilson95_ci": [
+    0.7466,
+    0.9169
+  ]
+}

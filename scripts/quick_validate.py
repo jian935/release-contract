@@ -49,13 +49,24 @@ def main() -> int:
     print("")
 
     print("== blind evaluation status ==")
-    # Score whatever annotation input this checkout happens to have; the
-    # script itself reports NOT RUN when there is none.
+    # Score the published round when there is one; otherwise whatever local
+    # annotation input this checkout happens to have. The script itself
+    # reports NOT RUN when there is none.
     blind_args = [sys.executable, "scripts/blind_eval.py"]
-    for candidate in ("eval/blind/answer_sheet.csv", "eval/blind/annotations.jsonl"):
-        if (ROOT / candidate).exists():
-            blind_args.append(candidate)
-            break
+    note = ""
+    rounds_dir = ROOT / "eval" / "blind" / "rounds"
+    published = (
+        sorted(p for p in rounds_dir.glob("*/answers.csv")) if rounds_dir.is_dir() else []
+    )
+    if published:
+        blind_args.append(published[-1].relative_to(ROOT).as_posix())
+        note = "  (published round: %s)" % published[-1].parent.name
+    else:
+        for candidate in ("eval/blind/answer_sheet.csv", "eval/blind/annotations.jsonl"):
+            if (ROOT / candidate).exists():
+                blind_args.append(candidate)
+                note = "  (local annotation input; not a published round)"
+                break
     blind = subprocess.run(
         blind_args,
         cwd=str(ROOT),
@@ -64,8 +75,8 @@ def main() -> int:
         errors="replace",
     )
     print((blind.stdout or "").strip())
-    if len(blind_args) > 2:
-        print("  (scored from a local annotation input; not a published figure)")
+    if note:
+        print(note)
     if blind.returncode != 0:
         print((blind.stderr or "")[-2000:])
         print("BLIND EVAL SCRIPT FAILED")
