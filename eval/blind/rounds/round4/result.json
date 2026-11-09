@@ -1,0 +1,72 @@
+{
+  "agreement": 0.8158,
+  "annotated_cases": 30,
+  "annotator": "a fourth human reader, independent of the first three; declared no exposure to eval/blind/rounds/ or eval/blind/model_check/",
+  "compared_with": "engine verdicts, not author-written golden labels",
+  "correct": 31,
+  "date": "2026-11-09",
+  "disagreement_causes": {
+    "other_gate_or_judgement": 5,
+    "wilson_lower_below_floor_but_point_estimate_above": 2
+  },
+  "disagreements": [
+    {
+      "annotator": "AUTO",
+      "case": "nb-03",
+      "cause": "other_gate_or_judgement",
+      "engine": "FENCE",
+      "segment": "refund-flow"
+    },
+    {
+      "annotator": "AUTO",
+      "case": "nb-04",
+      "cause": "other_gate_or_judgement",
+      "engine": "FENCE",
+      "segment": "claims-triage"
+    },
+    {
+      "annotator": "FENCE",
+      "case": "nb-07",
+      "cause": "other_gate_or_judgement",
+      "engine": "AUTO",
+      "segment": "billing-recon"
+    },
+    {
+      "annotator": "FENCE",
+      "case": "nb-08",
+      "cause": "other_gate_or_judgement",
+      "engine": "AUTO",
+      "segment": "orders-sync"
+    },
+    {
+      "annotator": "FENCE",
+      "case": "nb-11",
+      "cause": "other_gate_or_judgement",
+      "engine": "AUTO",
+      "segment": "claims-triage"
+    },
+    {
+      "annotator": "AUTO",
+      "case": "nb-18",
+      "cause": "wilson_lower_below_floor_but_point_estimate_above",
+      "engine": "FENCE",
+      "segment": "faq-bot"
+    },
+    {
+      "annotator": "HOLD",
+      "case": "nb-20",
+      "cause": "wilson_lower_below_floor_but_point_estimate_above",
+      "engine": "FENCE",
+      "segment": "faq-bot"
+    }
+  ],
+  "kind": "blind_round",
+  "prompts": "eval/blind/next_batch/prompts.jsonl",
+  "round": 4,
+  "scored_segments": 38,
+  "sheet": "eval/blind/rounds/round4/answers.csv",
+  "wilson95_ci": [
+    0.6658,
+    0.9078
+  ]
+}

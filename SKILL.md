@@ -255,13 +255,20 @@ python -m release_contract.cli version   # print version
   rule-class cases), with none unexplained: the three rates are exactly
   1 - 10/67, 1 - 4/67, 1 - 14/67. On both rule questions the engine is on the
   minority side — 2 of 3 readers disagree with it. See `DESIGN.md`.
-- A **model** answered a different 38-segment set and scored **0.8947**
-  [0.7587, 0.9583]. That is not a blind round and not a human reader: the model's
-  own rationales compute the Wilson bound, so it measures whether another model
-  can reproduce the rule, not whether the rule matches a person. Its four
-  disagreements are one question — whether `degrade` / `rollback` count as a
-  fallback, and from which harm rank gate G4 requires one (`DESIGN.md`, question
-  3). Adopting that reading would make it agree 38/38, so it was not adopted.
+- A fourth **human** reader answered a different 38-segment set and scored
+  **0.8158** [0.6658, 0.9078]. Different cases, so it gives no kappa with rounds
+  1–3 and no trend. Its seven disagreements are two Wilson-class (it used the
+  point estimate), two on open question 1 (a human fallback behind a high-harm
+  segment) and three on open question 3.
+- A **model** answered that same 38-segment set at **0.8947** [0.7587, 0.9583].
+  That is not a round and not a reader: its rationales compute the Wilson bound,
+  so it measures whether another model reproduces the rule. It agrees with the
+  engine exactly where the human departs, which is why the two are kept in
+  separate folders and never averaged. Its four disagreements raise the third
+  open question — whether `degrade` / `rollback` count as a fallback and from
+  which harm rank gate G4 requires one (`DESIGN.md`, question 3). Adopting that
+  reading would take the model to 38/38 and round 4 to 34/38, so it was not
+  adopted.
 - `scripts/property_scan.py` checks eight invariants over a fixed-seed
   parameter space without any golden label (traffic accounting, replay,
   Wilson and ablation monotonicity, invalid input, segment order, "more

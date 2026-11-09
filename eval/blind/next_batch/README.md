@@ -1,11 +1,11 @@
 # Next batch: the second case set
 
 `sheet.csv` is a second, independent packet of **30 contracts / 38 segments**
-built to reach inputs the first set never tested. A **language model** answered
-it; that sheet is kept in `../model_check/` with `"kind": "model_check"` and is
-not a human round. **No person has answered these cases yet**, so a human round
-on this packet is still open. This folder keeps the answer-free prompts, the
-generator and a blank copy, so the batch can be reused for that.
+built to reach inputs the first set never tested. It has been answered twice,
+independently: by a **language model** (`../model_check/`, 0.8947, kept separate
+and not a round) and by a **human reader** (`../rounds/round4/`, 0.8158). This
+folder keeps the answer-free prompts, the generator and a blank copy, so a second
+human reader can still be added.
 
 ## Why a new batch instead of a fourth round on the old one
 
@@ -65,7 +65,7 @@ python scripts/blind_eval.py path/to/returned.csv \
   --prompts eval/blind/next_batch/prompts.jsonl
 
 # freeze it as a human round, if you decide to publish it
-# (rounds/round4/ is still empty: only a model has answered this set)
+# (use a fresh rounds/roundN/ for a second human reader; round4 is taken)
 python scripts/publish_round.py --round 4 \
   --prompts eval/blind/next_batch/prompts.jsonl \
   --sheet eval/blind/rounds/round4/answers.csv \

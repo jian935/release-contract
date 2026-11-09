@@ -1,22 +1,24 @@
 # Blind evaluation protocol
 
-**Three human rounds are published, each with the sheet it was scored from.
-A fourth sheet was answered by a model and is kept separately under
-`model_check/` — it is not a round.**
+**Four human rounds are published, each with the sheet it was scored from, plus
+one model cross-check kept deliberately separate.**
 
 | round | case set | agreement | Wilson 95% | disagreements |
 |---|---|---|---|---|
 | 1 | first, 67 segs | **0.8507** | [0.7466, 0.9169] | 10, all Wilson-class |
 | 2 | first, 67 segs | **0.9403** | [0.8563, 0.9765] | 4, all rule-class |
 | 3 | first, 67 segs | **0.7910** | [0.6793, 0.8712] | 14 = 10 Wilson + 4 rule |
+| 4 | **second, 38 segs** | **0.8158** | [0.6658, 0.9078] | 7 = 2 Wilson + 5 rule |
 
 Every rate is recomputed from `rounds/roundN/answers.csv` by
-`scripts/publish_round.py` and re-verified by the project self-check.
+`scripts/publish_round.py` and re-verified by the project self-check. A language
+model also answered the 38 segments of round 4 and is archived in `model_check/`
+at **0.8947**; it is not a round and not a reader.
 
-**The three numbers are one engine against three human readers on the same 67
-fabricated segments.** Across all 37 disagreements, every one falls into one of
-two rule questions and **none is unexplained**. The rates are exactly
-`1 - 10/67`, `1 - 4/67` and `1 - 14/67`:
+**Rounds 1–3 are one engine against three human readers on the same 67 fabricated
+segments; round 4 is a different 38-segment set.** Across all 37 disagreements in
+rounds 1–3, every one falls into one of two rule questions and **none is
+unexplained**. The rates are exactly `1 - 10/67`, `1 - 4/67` and `1 - 14/67`:
 
 - **Wilson-class:** observed rate clears the floor, lower bound does not, no other
   gate violated — 10 fixed cases. A reader who reasons on the point estimate
@@ -32,16 +34,31 @@ Do not quote any single rate as "accuracy": reader 1 and reader 3 agree tightly
 with each other because they share a reading, and reader 2 dissents from the
 engine only on the rule axis. Per-round detail: `rounds/roundN/README.md`.
 
-### The second case set, answered by a model — not a round
+### The second case set: round 4 and a model cross-check on the same 38 segments
 
 The 30 new cases in `next_batch/` were built to reach inputs the first set never
-tested. A **language model** answered them at **0.8947** (34/38). Its sheet is
-archived in `model_check/` with `"kind": "model_check"`, and it is **not** counted
-as a fourth reader: a model reproducing the rule is a different measurement from a
-person judging a release. Its own rationales show the difference — on `nb-18` it
-computed the 95% lower bound itself.
+tested. Two independent sheets answered them:
 
-All four disagreements are one design choice seen twice:
+- a **human reader** at **0.8158** (31/38) — round 4, `rounds/round4/`
+- a **language model** at **0.8947** (34/38) — `model_check/`, with
+  `"kind": "model_check"`, **not** a round and not a fifth reader
+
+The model's sheet is kept separate because a model reproducing the rule is a
+different measurement from a person judging a release. Their answers show it: on
+`nb-18` the model computed the 95% lower bound itself and fenced the segment,
+while the reader used the 95% point estimate and released it.
+
+**Where they agree:** both dissent on the same three cases — `nb-07`, `nb-08`,
+`nb-11` — the G4 / fallback question below. **Where they part:** the reader also
+dissents on `nb-18` (they took the 95% point estimate against a 90% floor; the
+model computed the lower bound), on `nb-03` and `nb-04` (high and critical harm
+with a human fallback behind them, open question 1), and on `nb-20` (a 1.0 floor
+cannot be proven, so they answered `HOLD`). The model agrees with the engine on
+all four. In the other direction the model alone dissents on `nb-01`, where it
+wants a fallback from medium harm up. That is the point: the model follows the
+rule, the reader asks whether anyone is standing behind the segment.
+
+The model's four disagreements are one design choice seen twice:
 
 - **G4's floor.** It fires from `high` up; the model wants a human fallback from
   `medium` up. Only `nb-01` can show that difference.
@@ -52,10 +69,10 @@ All four disagreements are one design choice seen twice:
 
 Simulated cost of adopting either reading: the G4 floor change flips 0 segments
 in rounds 1–3 and 1 here; counting degrade/rollback as no fallback flips 1
-(`ho-010/at_ceiling`) and 3 here. **Neither is implemented**, because adopting
-both would make that sheet agree 38/38 — a rule tuned until it matches whoever
-answered it has validated nothing. Recorded as open question 3 in `DESIGN.md`,
-with weaker evidence than the first two: one model, on cases chosen to probe it.
+(`ho-010/at_ceiling`) and 3 here. **Neither is implemented.** Adopting both would
+take the model's sheet to 38/38 and this round to 34/38, and a rule tuned until
+it matches whoever answered it has validated nothing. Recorded as open question 3
+in `DESIGN.md`.
 
 ## Why this exists
 
@@ -151,10 +168,12 @@ accuracy figure leaks into any file an annotator sees.
 | 1 (2026-11-09) | one reader, no second reviewer | `rounds/round1/answers.csv`, every segment decided | yes — `rounds/round1/` | 0.8507; every disagreement is gate G2 |
 | 2 (2026-11-09) | a different reader, declared no access to round 1 or this repo | `rounds/round2/answers.csv`, every segment decided | yes — `rounds/round2/` | 0.9403; four disagreements, all rule precedence |
 | 3 (2026-11-09) | a third reader, declared no access to any published round | `rounds/round3/answers.csv`, every segment decided | yes — `rounds/round3/` | 0.7910; ten G2 plus the same four rule cases |
+| 4 (2026-11-09) | a fourth reader, declared no access to `rounds/` or `model_check/` | `rounds/round4/answers.csv`, **second case set**, every segment decided | yes — `rounds/round4/` | 0.8158 on 38 new segments; 7 = 2 Wilson + 5 rule |
 
-Outside the series: `model_check/` holds a **model's** answers to the second case
-set at 0.8947. It is not a round, produces no kappa with the three readers, and
-must not be cited as a fourth data point.
+Outside the series: `model_check/` holds a **model's** answers to the same second
+case set at 0.8947. It is not a round and produces no kappa with any reader.
+Round 4 is a human round but sits on a different case set, so it produces no kappa
+with rounds 1–3 either.
 
 The scoring script labels each disagreement with its cause
 (`wilson_lower_below_floor_but_point_estimate_above` versus
@@ -210,9 +229,10 @@ distribution: kappa from n=2 has no interval.
 new readers on the same cases**: three readers exhausted the first 67 segments,
 and a fourth reader on them buys one kappa point rather than a new rule
 question. It has its own `prompts.jsonl` and its own blank `sheet.csv` with the
-same columns. A model cross-check has been run on it (`model_check/`) and found a
-third rule question; no human reader has answered these cases yet, so a human
-round on `next_batch/` is still open. Score a returned
+same columns. It has been answered by a model (`model_check/`, 0.8947) and by a
+human reader (round 4, `rounds/round4/`, 0.8158); the model's sheet is not a
+round and the two are never averaged. A second human reader can still be added on
+these cases; score a returned
 sheet with `blind_eval.py --prompts eval/blind/next_batch/prompts.jsonl`; without
 that flag the script reads the first batch and rejects every row, which is
 deliberate. Its cases were **selected for coverage, not sampled**, so its rate

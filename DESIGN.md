@@ -112,10 +112,14 @@ The first two came from round 2 and neither is patched to match the reader. They
 are listed here because *changing them would invalidate every published round*,
 so they need a deliberate decision and a full re-run, not a quiet edit.
 
-A third came later, from a model cross-check on new cases. It is the cheapest to
-change and the weakest in evidence — and it is where the "do not tune the rule to
-match the annotator" rule bites hardest, because adopting it would take that
-check to 38/38.
+A third came later, from the new cases, raised independently by a human reader
+and by a model cross-check. It is the cheapest to change, and it is where the "do
+not tune the rule to match the annotator" rule bites hardest, because adopting it
+would take the model's sheet to 38/38.
+
+Question 1 has since been reproduced by a fourth reader on a completely different
+case set, which is the strongest corroboration this project can produce without
+launch data — and still not enough to change the rule, for the reason below.
 
 ### 1. Does an existing human fallback relax the harm ceiling?
 
@@ -123,6 +127,11 @@ check to 38/38.
   readers saw `harm=high` (and `critical`) against a `medium` ceiling, noticed a
   human fallback was configured, and answered `AUTO`; the engine answers `FENCE`
   via G3. Round 1 answered `FENCE`, so the split is 2 to 1 against the engine.
+  Round 4 then reproduced it on a **different case set**: `nb-03` (high harm,
+  medium ceiling) and `nb-04` (critical harm, medium ceiling), both with
+  `fallback=human`, were released with the reason "真出事人拦得住" — if someone is
+  there to catch it, the ceiling is not the deciding fact. That is three readers
+  across two case sets, independently.
 - **Position today:** the ceiling is absolute. It describes how bad being wrong
   is; a fallback changes who catches it, not how bad it is.
 - **Counter-position:** if every error is caught by a human anyway, the realised
@@ -140,7 +149,8 @@ check to 38/38.
   `critical` minus one rank is above a `medium` ceiling. To reproduce both of
   that reader's verdicts the rule has to be "a fallback removes the ceiling
   entirely", which is a much stronger claim and would need a harm model, not a
-  rank shift.
+  rank shift. On the second case set that stronger reading flips **2** segments,
+  `nb-03` and `nb-04` — both of which round 4 released.
 
 ### 2. When evidence is thin *and* a hard ceiling is violated, `HOLD` or `FENCE`?
 
@@ -166,14 +176,13 @@ check to 38/38.
 
 ### 3. Is `degrade` / `rollback` a fallback, and from which harm rank does G4 require one?
 
-- **Evidence:** `eval/blind/model_check/` — a **language model** answered the
-  second case set. Four disagreements, all `FENCE` against the engine's `AUTO`,
-  all on this question: `nb-01` (medium harm, no fallback), `nb-07` and `nb-08`
-  (high harm with `degrade` / `rollback` and a 0.6 review cost), `nb-11`
-  (critical harm with `degrade`). This is **not** a human round and is kept out
-  of `rounds/`: the model's rationales compute the Wilson bound, so it is
-  reproducing the rule rather than judging a release. It is cited here because
-  the four cases, not because of who answered them.
+- **Evidence:** two independent sheets on the second case set — `rounds/round4/`
+  (a human reader) and `eval/blind/model_check/` (a language model). The reader
+  dissents on `nb-07`, `nb-08` and `nb-11`; the model on those three plus
+  `nb-01`. All four cases are on this question: `nb-01` (medium harm, no
+  fallback — the model alone), `nb-07` and `nb-08` (high harm with
+  `degrade` / `rollback` and a 0.6 review cost), `nb-11` (critical harm with
+  `degrade`).
 - **Position today:** G4 fires only when harm is `high` or above *and* fallback is
   exactly `none`; `degrade` and `rollback` count as contained damage. G5 loads
   `human_review_cost` only for `fallback=human`, so a degrade segment carrying a
@@ -188,23 +197,27 @@ check to 38/38.
 - **Measured cost today:** the floor change (high → medium) flips **0** of the 67
   segments in rounds 1–3 and **1** here (`nb-01`); counting degrade/rollback as
   no fallback flips **1** (`ho-010/at_ceiling`) and **3** (`nb-07`, `nb-08`,
-  `nb-11`). Recomputed from the sheets; neither change is implemented.
-- **Why it is not adopted on this evidence:** adopting both would make that sheet
-  agree **38/38**. A rule tuned until it matches whoever answered it validates
-  nothing — the 1.0000 would be an artefact of the edit, not a measurement.
-- **Evidence strength:** the weakest of the three. Questions 1 and 2 have three
-  human readers on the same cases; this has one model, on cases chosen to probe
-  exactly this. It is a question raised, not a position won. A human round on
-  `next_batch/` would settle whether people read it the same way — the model's
-  agreement is not a substitute.
+  `nb-11`). Recomputed from the sheets; neither change is implemented. Note that
+  the floor change would *create* a disagreement with round 4: that reader
+  released `nb-01`, so moving the floor to `medium` would fence a segment the
+  reader allowed.
+- **Why it is not adopted on this evidence:** adopting both would take the
+  model's sheet to **38/38** and round 4 to **34/38**. A rule tuned until it
+  matches whoever answered it validates nothing — the 1.0000 would be an artefact
+  of the edit, not a measurement.
+- **Evidence strength:** weaker than questions 1 and 2. It has one human reader
+  and one model on the same new cases, dissenting in the same direction. But read
+  the reader's reasons: `nb-08` is cost arithmetic (0.62 against a 0.5 cap), not
+  a semantic objection, so only `nb-07` and `nb-11` are unambiguously "degrade is
+  not a fallback". No second human has seen these cases.
 
-Two readers out of three now dissent on both questions, in the same direction,
-and they reached it independently (round 3 used the point estimate, round 2 the
-lower bound, so the two rule answers are not an artefact of one reading). That is
-no longer "one reader's opinion", but it is still not a reason to patch the
-engine inside a release: the decision has a measured cost, a documented
-consequence (every published round would be re-scored), and belongs to whoever
-owns the tool's semantics.
+Three readers out of four now dissent on question 1 — two on the first case set
+and one on the second, none of them having seen the others' cases — and they
+reached it independently (round 3 used the point estimate, round 2 the lower
+bound). Question 2 remains 2 of 3. That is no longer "one reader's opinion," but
+it is still not a reason to patch the engine inside a release: the decision has a
+measured cost, a documented consequence (every published round would be
+re-scored), and belongs to whoever owns the tool's semantics.
 
 The second question does justify a documentation fix, which is in place: `HOLD` is
 described as "not enough evidence", never as "safe to ship".

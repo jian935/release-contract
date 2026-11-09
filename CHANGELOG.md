@@ -120,6 +120,16 @@ and two silent release paths are closed.**
   round on another case set is recomputed against its own questions instead of
   failing with every row reported as an unknown case id.
 
+- Published blind round 4 on that batch with a **human** reader: **0.8158**
+  (31/38), Wilson 95% [0.6658, 0.9078], seven disagreements = 2 Wilson-class + 5
+  rule-class. It **reproduces open question 1 on cases nobody had seen**: two
+  high/critical-harm segments with a human fallback behind them were released by
+  the reader and fenced by the engine. It also lands `nb-20` on `HOLD` rather than
+  `FENCE` — a 1.0 floor is undecidable, not unsafe.
+- Round 4 produces no kappa with rounds 1–3 (different cases, selected not
+  sampled), and its 0.8158 must not be set beside the model's 0.8947 on the same
+  sheet: the model agrees with the engine exactly where the reader departs.
+
 ## 0.2.0 — 2026-11-09
 
 **Usable as a skill, not just a script.**
