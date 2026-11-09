@@ -12,6 +12,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import shutil
 import subprocess
 import sys
 import time
@@ -42,10 +43,19 @@ def main() -> int:
     ap.add_argument("--quiet", action="store_true", help="hide the command echo")
     args = ap.parse_args()
 
+    # Start clean: a leftover contract would make `import` print
+    # "refusing to overwrite", which is correct behaviour but ruins a recording.
+    if WORK.exists():
+        shutil.rmtree(WORK)
     WORK.mkdir(parents=True, exist_ok=True)
+    # Unbuffered, so a recording shows the command before its output instead of
+    # stderr jumping the queue.
+    sys.stdout.reconfigure(line_buffering=True)
+    sys.stderr.reconfigure(line_buffering=True)
     for command, note in STEPS:
         if not args.quiet:
-            print("$ " + command)
+            print("\n$ " + command)
+            sys.stdout.flush()
         proc = subprocess.run(
             command,
             cwd=str(ROOT),
@@ -56,7 +66,7 @@ def main() -> int:
         )
         sys.stdout.write(proc.stdout or "")
         if proc.stderr.strip():
-            sys.stderr.write(proc.stderr)
+            sys.stdout.write(proc.stderr)
         if note:
             print("# %s" % note)
         sys.stdout.flush()
