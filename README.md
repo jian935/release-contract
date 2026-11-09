@@ -217,7 +217,7 @@ Read the numbers as how far a reader's judgement sits from a deterministic rule
 set on fabricated cases — never as accuracy on production traffic, and never one
 rate alone. Per-round tables, reproduction commands and limits:
 `eval/blind/rounds/round1/README.md`, `rounds/round2/README.md`,
-`rounds/round3/README.md`.
+`rounds/round3/README.md`, `rounds/round4/README.md`.
 
 What would falsify this tool: an independent annotator systematically
 disagreeing with `AUTO` verdicts on high-harm segments (the opposite direction
@@ -254,7 +254,7 @@ been measured.
 
 ## Install
 
-As an agent skill (works once the repository is published):
+As an agent skill:
 
 ```
 npx skills add jian935/release-contract

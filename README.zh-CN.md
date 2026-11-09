@@ -183,7 +183,7 @@ TRAFFIC (denominator = full traffic 1.0)
 这些数字应读作「读者的判断离一套确定性规则有多远」（而且是在编造的用例上），
 不是线上准确率，也不能单独引用其中任何一个。分轮完整表、复现命令与局限见
 `eval/blind/rounds/round1/README.md`、`rounds/round2/README.md`、
-`rounds/round3/README.md`。
+`rounds/round3/README.md`、`rounds/round4/README.md`。
 
 什么能证伪它：独立标注者系统性不认同高危分片上的 `AUTO` 判定（与观测到的偏差方向相反）；
 或真实上线中某个 `AUTO` 分片的回退频率远高于其记录的 Wilson 基线所预测。
@@ -209,7 +209,7 @@ TRAFFIC (denominator = full traffic 1.0)
 
 ## 安装
 
-作为 agent skill（仓库发布后可用）：
+作为 agent skill：
 
 ```
 npx skills add jian935/release-contract
