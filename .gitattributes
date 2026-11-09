@@ -1,0 +1,8 @@
+# Keep line endings identical on Windows and Linux: the project compares
+# generated text (README numbers, sheets, the SVG) against live output, and a
+# CRLF/LF mismatch would look like drift.
+* text=auto eol=lf
+*.svg text eol=lf
+*.csv text eol=lf
+*.json text eol=lf
+*.jsonl text eol=lf
