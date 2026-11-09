@@ -14,7 +14,7 @@ cropped or scaled._
 _This second one is re-rendered from live command output instead of captured, so
 the self-check can fail when the engine changes without it._
 
-Version: 0.2.0 · MIT · [中文说明](README.zh-CN.md)
+Version: 0.3.0 · MIT · [中文说明](README.zh-CN.md)
 
 Design decisions: [DESIGN.md](DESIGN.md) · Changelog: [CHANGELOG.md](CHANGELOG.md)
 

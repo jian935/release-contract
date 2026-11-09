@@ -3,7 +3,10 @@
 Numbers here are measurements from this repository, not marketing. Anything
 not measured is marked as such.
 
-## Unreleased
+## 0.3.0 — 2026-11-09
+
+**Every disagreement across three blind rounds now has a rule attached to it,
+and two silent release paths are closed.**
 
 - Published blind round 3 under `eval/blind/rounds/round3/`: agreement **0.7910**,
   Wilson 95% [0.6793, 0.8712] over the same 67 segments. This reader used the

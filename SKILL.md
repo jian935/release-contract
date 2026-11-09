@@ -271,4 +271,4 @@ python -m release_contract.cli version   # print version
 - Upstream, `complaint-to-eval` answers "what should we test"; this skill
   answers "can we ship". Complementary, neither replaces the other.
 
-Author: jian935 · MIT · Version 0.2.0
+Author: jian935 · MIT · Version 0.3.0

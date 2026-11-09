@@ -12,7 +12,7 @@ _这是 Windows 11 上一次真实运行的屏幕录制，只截了控制台窗�
 _第二张是从实时命令输出重新渲染的，不是录制——这样才能让自检在「引擎改了、
 图没更新」时直接报错。_
 
-版本：0.2.0 · MIT · [English](README.md)
+版本：0.3.0 · MIT · [English](README.md)
 
 设计取舍：[DESIGN.md](DESIGN.md) · 变更记录：[CHANGELOG.md](CHANGELOG.md)
 
