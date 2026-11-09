@@ -9,8 +9,8 @@ questions at 2 to 1, and every disagreement in 37 has been accounted for. A
 fourth reader on these exact cases adds a band point and very little
 information. The next round worth running is **new cases nobody has seen** —
 that is the only thing that can reveal a rule question the current 50 cases do
-not contain. Do that by generating a fresh answer-free packet from a new suite,
-not by re-using this sheet.
+not contain. That packet now exists: see `../next_batch/`, which carries new
+cases and its own blank sheet. Do not re-use this sheet for a fourth round.
 
 ## Admission rules (read before opening the sheet)
 

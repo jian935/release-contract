@@ -175,4 +175,14 @@ answers are public, anyone who has seen them cannot produce a blind measurement.
 keeps that sheet blank and in sync. Treat two readers as a starting point, not a
 distribution: kappa from n=2 has no interval.
 
+`next_batch/` is the packet for the round after that. It carries **new cases, not
+new readers on the same cases**: three readers exhausted the first 67 segments,
+and a fourth reader on them buys one kappa point rather than a new rule
+question. It has its own `prompts.jsonl`, its own blank `sheet.csv` with the
+same columns, and no agreement figure — nothing has been annotated. Score it with
+`blind_eval.py --prompts eval/blind/next_batch/prompts.jsonl`; without that flag
+the script reads the first batch and rejects every row, which is deliberate. Its
+cases were **selected for coverage, not sampled**, so its rate must never be
+subtracted from the earlier ones or presented as a trend.
+
 

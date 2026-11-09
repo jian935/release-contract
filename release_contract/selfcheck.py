@@ -517,6 +517,100 @@ def run_checks() -> list[Check]:
         )
     )
 
+    # 19. The next batch: cases nobody has annotated yet. A new batch exists
+    #     because three readers have used up the first 67 segments; it must not
+    #     reuse their ids, or the "new" round would quietly be a re-run.
+    batch_spec = importlib.util.spec_from_file_location(
+        "gen_next_batch", ROOT / "scripts" / "gen_next_batch.py"
+    )
+    batch = importlib.util.module_from_spec(batch_spec)
+    batch_spec.loader.exec_module(batch)
+    batch_prompts_path = ROOT / "eval" / "blind" / "next_batch" / "prompts.jsonl"
+    batch_sheet_path = ROOT / "eval" / "blind" / "next_batch" / "sheet.csv"
+    batch_text = _read(batch_prompts_path)
+    batch_rows = [
+        json.loads(line) for line in batch_text.splitlines() if line.strip()
+    ]
+    batch_case_ids = {r["id"] for r in batch_rows}
+    first_case_ids = {r["id"] for r in blind_rows}
+    first_segment_ids = {
+        s["id"] for r in blind_rows for s in r["contract"]["segments"]
+    }
+    batch_segment_ids = {
+        s["id"] for r in batch_rows for s in r["contract"]["segments"]
+    }
+    # Segment names repeat across cases on purpose (the same business area can
+    # appear in more than one contract), so the row count is not len(set).
+    batch_segment_count = sum(
+        len(r["contract"]["segments"]) for r in batch_rows
+    )
+    batch_leak = [
+        r.get("id", "?")
+        for r in batch_rows
+        if any(
+            k in r or k in r.get("contract", {})
+            for k in ("expected", "why", "kind", "covers")
+        )
+    ]
+    batch_in_sync = batch_text == batch.build_prompts()
+    checks.append(
+        _check(
+            "next_batch_answer_free_and_disjoint",
+            bool(batch_rows)
+            and not batch_leak
+            and batch_in_sync
+            and not (batch_case_ids & first_case_ids)
+            and not (batch_segment_ids & first_segment_ids),
+            "cases=%d segments=%d distinct_names=%d in_sync=%s leaked=%s "
+            "reused_case_ids=%d reused_segment_ids=%d"
+            % (
+                len(batch_rows),
+                batch_segment_count,
+                len(batch_segment_ids),
+                batch_in_sync,
+                batch_leak,
+                len(batch_case_ids & first_case_ids),
+                len(batch_segment_ids & first_segment_ids),
+            ),
+        )
+    )
+
+    # 20. The batch sheet must be blank, reproducible, and laid out with the
+    #     same columns as the first sheet so an annotator needs no new habit.
+    batch_sheet_bytes = batch_sheet_path.read_bytes()
+    batch_sheet_text = batch_sheet_bytes.decode("utf-8-sig")
+    batch_sheet_rows = list(csv.DictReader(io.StringIO(batch_sheet_text)))
+    batch_filled = [
+        r
+        for r in batch_sheet_rows
+        if (r.get("你的判定") or "").strip() or (r.get("理由") or "").strip()
+    ]
+    batch_score_leaks = any(s in batch_sheet_text for s in SCORE_LEAKS)
+    batch_header_ok = (
+        bool(batch_sheet_rows) and list(batch_sheet_rows[0]) == batch.HEADER
+    )
+    batch_sheet_in_sync = (
+        batch_sheet_bytes == batch.build_sheet().encode("utf-8-sig")
+    )
+    checks.append(
+        _check(
+            "next_batch_sheet_blank_and_matches_header",
+            bool(batch_sheet_rows)
+            and batch_header_ok
+            and batch_sheet_in_sync
+            and not batch_filled
+            and not batch_score_leaks,
+            "rows=%d header_ok=%s in_sync=%s filled=%d score_leaks=%s"
+            % (
+                len(batch_sheet_rows),
+                batch_header_ok,
+                batch_sheet_in_sync,
+                len(batch_filled),
+                batch_score_leaks,
+            ),
+        )
+    )
+
     # 19. The README animation must be derivable from the current engine.
     #     A hash sidecar is used instead of re-rendering the GIF, so this check
     #     needs no Pillow and runs on every CI interpreter. A screenshot that

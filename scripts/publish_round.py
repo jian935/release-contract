@@ -34,9 +34,15 @@ def _load(name: str, relative: str):
     return module
 
 
-def build(sheet: Path, round_id: int, date: str, annotator: str) -> dict:
+def build(
+    sheet: Path,
+    round_id: int,
+    date: str,
+    annotator: str,
+    prompts: "Path | None" = None,
+) -> dict:
     blind = _load("blind_eval", "scripts/blind_eval.py")
-    scored = blind.run(sheet)
+    scored = blind.run(sheet, prompts)
     if scored["status"] != "measured":
         raise SystemExit(
             "sheet produced no score (%s); refusing to publish" % scored["status"]
@@ -64,12 +70,24 @@ def main() -> int:
     ap.add_argument("--out", required=True)
     ap.add_argument("--date", required=True)
     ap.add_argument("--annotator", required=True)
+    ap.add_argument(
+        "--prompts",
+        default=None,
+        help="prompt file for this batch (default: the first batch)",
+    )
     ap.add_argument("--force", action="store_true")
     args = ap.parse_args()
 
     sheet = (ROOT / args.sheet).resolve() if not Path(args.sheet).is_absolute() else Path(args.sheet)
     out = (ROOT / args.out).resolve() if not Path(args.out).is_absolute() else Path(args.out)
-    result = build(sheet, args.round_id, args.date, args.annotator)
+    prompts = None
+    if args.prompts:
+        prompts = (
+            (ROOT / args.prompts).resolve()
+            if not Path(args.prompts).is_absolute()
+            else Path(args.prompts)
+        )
+    result = build(sheet, args.round_id, args.date, args.annotator, prompts)
     text = json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
 
     if out.exists() and not args.force:

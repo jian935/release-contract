@@ -124,14 +124,17 @@ def _not_run(message: str) -> dict[str, Any]:
     }
 
 
-def run(annotations_path: Path) -> dict[str, Any]:
+def run(annotations_path: Path, prompts_path: Path | None = None) -> dict[str, Any]:
     if not annotations_path.exists():
         return _not_run(
             "No blind evaluation has been run. There is no measured "
             "agreement score. Do not report one."
         )
 
-    prompts = {p["id"]: p for p in _read_jsonl(PROMPTS)}
+    # A second batch has its own prompt file. Scoring it against the first
+    # batch's prompts would silently drop every row it cannot match.
+    prompt_file = Path(prompts_path) if prompts_path is not None else PROMPTS
+    prompts = {p["id"]: p for p in _read_jsonl(prompt_file)}
     annotations = _load_annotations(annotations_path)
     total_possible = sum(len(p["contract"]["segments"]) for p in prompts.values())
     total = 0
@@ -220,9 +223,14 @@ def render(result: dict[str, Any]) -> str:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("annotations", nargs="?", default=str(DEFAULT_ANNOTATIONS))
+    ap.add_argument(
+        "--prompts",
+        default=str(PROMPTS),
+        help="prompt file to score against (default: the first batch)",
+    )
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args()
-    result = run(Path(args.annotations))
+    result = run(Path(args.annotations), Path(args.prompts))
     if args.json:
         print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
     else:

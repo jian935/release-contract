@@ -97,6 +97,30 @@ class TestBlindIntake(unittest.TestCase):
         text = self.mod.render(result)
         self.assertTrue("NOT RUN" in text)
 
+    def test_batch_sheet_is_scored_against_its_own_prompts(self):
+        batch = ROOT / "eval" / "blind" / "next_batch" / "prompts.jsonl"
+        tmp, path = self._csv(
+            "id,segment_id,verdict,rationale\n"
+            "nb-01,faq-bot,AUTO,plumbing test only\n"
+        )
+        with tmp:
+            result = self.mod.run(path, batch)
+        self.assertTrue(result["status"] == "measured")
+        self.assertTrue(result["scored_segments"] == 1)
+        # 30 cases / 38 segments in the batch, so the denominator must be 38.
+        self.assertTrue(result["unannotated_segments"] == 37)
+
+    def test_batch_sheet_against_first_batch_prompts_is_refused(self):
+        # Silently scoring a new sheet against the old prompts would drop every
+        # row and report a smaller denominator as if it were the whole batch.
+        tmp, path = self._csv(
+            "id,segment_id,verdict,rationale\n"
+            "nb-01,faq-bot,AUTO,plumbing test only\n"
+        )
+        with tmp:
+            with self.assertRaises(ValueError):
+                self.mod.run(path)
+
 
 class TestDisagreementCause(unittest.TestCase):
     """Grouping matters: one contested gate is a design argument, not noise."""

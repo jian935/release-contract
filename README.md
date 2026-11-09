@@ -232,6 +232,10 @@ been measured.
 - Three annotators is not a sample of annotators: kappas of 0.6554 / 0.8929 /
   0.7498 are a band with no interval, and all three answered the same 67
   fabricated cases.
+- A further batch of cases sits unlabelled in `eval/blind/next_batch/`. Nobody
+  has annotated it, so it has no agreement figure. Its cases were selected for
+  coverage rather than sampled, so its rate must not be subtracted from the
+  earlier ones or read as a trend.
 - The engine is knowingly more conservative than a point-estimate read of the
   same numbers: it fences segments whose observed rate clears the floor while
   the Wilson lower bound does not. If your organisation intends point-estimate
