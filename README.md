@@ -3,6 +3,8 @@
 Decide which traffic segments of an AI product the offline evidence is strong
 enough to release to — deterministically, with every gate visible.
 
+![release-contract deciding a synthetic demo contract](assets/demo.svg)
+
 Version: 0.2.0 · MIT · [中文说明](README.zh-CN.md)
 
 Design decisions: [DESIGN.md](DESIGN.md) · Changelog: [CHANGELOG.md](CHANGELOG.md)

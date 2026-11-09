@@ -2,6 +2,8 @@
 
 判定 AI 产品的离线证据，够不够支撑「哪些流量分片可以自动化放行」——确定性、每道闸都可见。
 
+![release-contract 判定一份合成演示合约](assets/demo.svg)
+
 版本：0.2.0 · MIT · [English](README.md)
 
 设计取舍：[DESIGN.md](DESIGN.md) · 变更记录：[CHANGELOG.md](CHANGELOG.md)
