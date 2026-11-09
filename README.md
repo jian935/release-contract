@@ -3,7 +3,9 @@
 Decide which traffic segments of an AI product the offline evidence is strong
 enough to release to — deterministically, with every gate visible.
 
-Version: 0.1.0 · MIT · [中文说明](README.zh-CN.md)
+Version: 0.2.0 · MIT · [中文说明](README.zh-CN.md)
+
+Design decisions: [DESIGN.md](DESIGN.md) · Changelog: [CHANGELOG.md](CHANGELOG.md)
 
 > Not an eval framework: it does not measure quality. It decides where the
 > existing evidence justifies letting the model act alone.
@@ -33,6 +35,16 @@ interval widths differ.
 | 1000 | 970 | 0.970 | 0.9575 |
 
 ## 30-second example
+
+Start from a valid template, replace the counts, decide:
+
+```
+python -m release_contract.cli init -o contract.json    # n=0 -> HOLD by design
+# replace n / successes with your real eval counts
+python -m release_contract.cli decide contract.json
+```
+
+The bundled demo shows a partial release:
 
 ```
 python -m release_contract.cli decide examples/demo_contract.json
@@ -77,6 +89,8 @@ tool could be tuned to look good.
 
 | command | what it does |
 |---|---|
+| `python -m release_contract.cli init -o contract.json` | write a valid starter contract (n=0, so it decides `HOLD`) |
+| `python -m release_contract.cli validate contract.json` | check structure and coverage without deciding |
 | `python -m release_contract.cli decide examples/demo_contract.json` | human-readable decision |
 | `python -m release_contract.cli decide examples/demo_contract.json --json` | stable-key JSON for golden diffs |
 | `python -m release_contract.cli gates` | list the gates |
@@ -85,7 +99,16 @@ tool could be tuned to look good.
 | `python -m release_contract.cli diff examples/demo_contract.json examples/demo_contract_v2.json` | compare two versions segment by segment |
 
 `decide --fail-on FENCE,HOLD` returns a non-zero exit code if any segment
-hits a listed verdict, so a pipeline can gate on it.
+hits a listed verdict, and `diff --fail-on-regression` returns the same code
+when a segment got worse. Exit codes are the pipeline interface:
+
+| code | meaning |
+|---|---|
+| 0 | decided, nothing the caller asked to fail on |
+| 2 | a gate the caller opted into (`--fail-on` / `--fail-on-regression`) was hit |
+| 3 | unusable input: missing file, malformed JSON, or a rejected contract |
+
+An invalid contract prints one line on stderr and exits 3 — never a traceback.
 
 ## Eval sets
 
@@ -159,12 +182,29 @@ been measured.
 
 ## Install
 
+As an agent skill (works once the repository is published):
+
 ```
 npx skills add jian935/release-contract
+```
+
+As a CLI, from a checkout (Python 3.10+):
+
+```
+python -m pip install .
+release-contract --version
+release-contract decide examples/demo_contract.json
+```
+
+Or run it without installing anything:
+
+```
+python -m release_contract.cli decide examples/demo_contract.json
 python scripts/quick_validate.py
 ```
 
-Zero third-party dependencies. Python standard library only.
+Zero third-party runtime dependencies — standard library only. `pyproject.toml`
+exists so `pip` can build the console script; nothing in the engine needs it.
 
 ## License
 

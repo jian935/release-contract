@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "release-contract"
+version = "0.2.0"
+description = "Deterministic, auditable per-segment release gates for AI products"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "jian935" }]
+keywords = ["agents", "llm", "evaluation", "release", "product-management", "wilson"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+]
+dependencies = []
+
+[project.scripts]
+release-contract = "release_contract.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/jian935/release-contract"
+
+[tool.setuptools]
+packages = ["release_contract"]

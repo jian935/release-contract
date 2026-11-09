@@ -2,7 +2,9 @@
 
 判定 AI 产品的离线证据，够不够支撑「哪些流量分片可以自动化放行」——确定性、每道闸都可见。
 
-版本：0.1.0 · MIT · [English](README.md)
+版本：0.2.0 · MIT · [English](README.md)
+
+设计取舍：[DESIGN.md](DESIGN.md) · 变更记录：[CHANGELOG.md](CHANGELOG.md)
 
 > 它不是评测框架：不测量质量，只判定现有证据足以让模型在哪些地方独立行动。
 
@@ -27,6 +29,16 @@ Wilson 下界只有 0.8865，低于 0.9 门槛——零失败同样不是证据�
 | 1000 | 970 | 0.970 | 0.9575 |
 
 ## 30 秒示例
+
+从一个合法模板起步，把数字换成你自己的：
+
+```
+python -m release_contract.cli init -o contract.json    # n=0，按设计会判 HOLD
+# 把 n / successes 换成真实评测计数
+python -m release_contract.cli decide contract.json
+```
+
+内置演示展示一次「部分上线」：
 
 ```
 python -m release_contract.cli decide examples/demo_contract.json
@@ -69,6 +81,8 @@ TRAFFIC (denominator = full traffic 1.0)
 
 | 命令 | 作用 |
 |---|---|
+| `python -m release_contract.cli init -o contract.json` | 写出合法起步合约（n=0，所以会判 `HOLD`） |
+| `python -m release_contract.cli validate contract.json` | 只校验结构与覆盖，不做判定 |
 | `python -m release_contract.cli decide examples/demo_contract.json` | 人类可读的判定报告 |
 | `python -m release_contract.cli decide examples/demo_contract.json --json` | 稳定键序 JSON，用于 CI golden diff |
 | `python -m release_contract.cli gates` | 列出六道闸 |
@@ -76,7 +90,16 @@ TRAFFIC (denominator = full traffic 1.0)
 | `python -m release_contract.cli version` | 打印版本 |
 | `python -m release_contract.cli diff examples/demo_contract.json examples/demo_contract_v2.json` | 逐分片对比两个版本 |
 
-`decide --fail-on FENCE,HOLD` 在任一分片命中列出的判定时返回非零退出码，便于流水线卡口。
+`decide --fail-on FENCE,HOLD` 在任一分片命中列出的判定时返回非零退出码；
+`diff --fail-on-regression` 在有分片变差时返回同一个码。退出码就是流水线接口：
+
+| 码 | 含义 |
+|---|---|
+| 0 | 判定完成，没有命中调用方要求卡住的条件 |
+| 2 | 命中了调用方主动开启的闸口（`--fail-on` / `--fail-on-regression`） |
+| 3 | 输入不可用：文件不存在、JSON 格式错、或合约被拒 |
+
+合约不合法时只在 stderr 打一行并退出 3，**不会抛 traceback**。
 
 ## 评测集
 
@@ -131,12 +154,29 @@ TRAFFIC (denominator = full traffic 1.0)
 
 ## 安装
 
+作为 agent skill（仓库发布后可用）：
+
 ```
 npx skills add jian935/release-contract
+```
+
+作为 CLI，在克隆目录里（Python 3.10+）：
+
+```
+python -m pip install .
+release-contract --version
+release-contract decide examples/demo_contract.json
+```
+
+或者完全不安装：
+
+```
+python -m release_contract.cli decide examples/demo_contract.json
 python scripts/quick_validate.py
 ```
 
-零第三方依赖，只用 Python 标准库。
+运行时零第三方依赖，只用标准库。`pyproject.toml` 只是让 `pip` 能构建出命令行入口，
+引擎本身不需要它。
 
 ## 许可
 

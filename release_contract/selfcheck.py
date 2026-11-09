@@ -61,21 +61,30 @@ def _check(name: str, ok: bool, detail: str) -> Check:
 def run_checks() -> list[Check]:
     checks: list[Check] = []
 
-    # 1. Version appears in three places and agrees.
+    # 1. Version appears in every place that can drift, and they all agree.
     init_text = _read(ROOT / "release_contract" / "__init__.py")
     m = re.search(r'__version__\s*=\s*"([^"]+)"', init_text)
     version = m.group(1) if m else ""
     en = _read(ROOT / "README.md")
     zh = _read(ROOT / "README.zh-CN.md")
+    pyproject = _read(ROOT / "pyproject.toml")
+    pkg_version = ""
+    if pyproject:
+        pm = re.search(r'(?m)^version\s*=\s*"([^"]+)"', pyproject)
+        pkg_version = pm.group(1) if pm else ""
+    packaging_ok = (not pyproject) or (pkg_version == version)
     checks.append(
         _check(
             "version_sync",
             bool(version)
             and (("Version: %s" % version) in en)
-            and (("Version: %s" % version) in zh or ("版本：%s" % version) in zh),
-            "version %s must appear in __init__.py and both READMEs" % (version or "MISSING"),
+            and (("Version: %s" % version) in zh or ("版本：%s" % version) in zh)
+            and packaging_ok,
+            "version %s must appear in __init__.py, both READMEs and pyproject (found %r)"
+            % (version or "MISSING", pkg_version or "none"),
         )
     )
+
 
     # 2. Every number in one README must appear in the other. No chosen denominator.
     diff = _numbers(en) ^ _numbers(zh)

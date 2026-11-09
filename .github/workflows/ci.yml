@@ -24,3 +24,29 @@ jobs:
         run: python scripts/quick_validate.py
       - name: Verify the example contract still replays
         run: python -m release_contract.cli decide examples/demo_contract.json --json
+      - name: Verify the starter template is valid and holds
+        run: |
+          python -m release_contract.cli init -o /tmp/contract.json
+          python -m release_contract.cli validate /tmp/contract.json
+          python -m release_contract.cli decide /tmp/contract.json --fail-on AUTO
+
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install the console script from the repo
+        run: python -m pip install -e .
+      - name: The installed entry point must work and match the package version
+        run: |
+          release-contract --version
+          release-contract gates
+          release-contract decide examples/demo_contract.json --json > /dev/null
+      - name: Exit code 2 must survive installation
+        run: |
+          set +e
+          release-contract decide examples/demo_contract.json --fail-on FENCE
+          code=$?
+          test "$code" -eq 2 || { echo "expected 2, got $code"; exit 1; }
