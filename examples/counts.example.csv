@@ -1,0 +1,4 @@
+﻿id,n,successes,volume_share,harm_if_wrong,fallback,cost_per_case,human_review_cost
+routine_faq,400,388,0.6,low,none,0.02,0.0
+billing_dispute,120,118,0.25,medium,human,0.05,0.8
+contract_redline,100,99,0.1,high,human,0.03,0.0

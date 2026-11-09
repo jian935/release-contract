@@ -82,6 +82,7 @@ TRAFFIC (denominator = full traffic 1.0)
 | 命令 | 作用 |
 |---|---|
 | `python -m release_contract.cli init -o contract.json` | 写出合法起步合约（n=0，所以会判 `HOLD`） |
+| `python -m release_contract.cli import counts.csv --product "checkout v7" -o contract.json` | 从原始计数 CSV 生成合约 |
 | `python -m release_contract.cli validate contract.json` | 只校验结构与覆盖，不做判定 |
 | `python -m release_contract.cli decide examples/demo_contract.json` | 人类可读的判定报告 |
 | `python -m release_contract.cli decide examples/demo_contract.json --json` | 稳定键序 JSON，用于 CI golden diff |
@@ -100,6 +101,11 @@ TRAFFIC (denominator = full traffic 1.0)
 | 3 | 输入不可用：文件不存在、JSON 格式错、或合约被拒 |
 
 合约不合法时只在 stderr 打一行并退出 3，**不会抛 traceback**。
+
+`import` 读 `id`、`n`、`successes`，可选 `volume_share`、`harm_if_wrong`、
+`fallback`、`cost_per_case`、`human_review_cost`（示例见
+`examples/counts.example.csv`）。若出现 `success_rate` 或 `accuracy` 列会被**拒绝并说明原因**：
+没有分母的比率正是这个工具不接受的东西。未知列同样拒绝，打错字不会静默变成默认值。
 
 ## 评测集
 

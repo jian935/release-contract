@@ -15,12 +15,22 @@ from pathlib import Path
 
 from . import __version__
 from .diff import diff_contracts, render as render_diff
-from .engine import ALL_GATES, ContractError, decide, load_contract
+from .engine import ALL_GATES, ContractError, contract_from_dict, decide, load_contract
 from .evalset import render as render_eval
 from .evalset import run_suite
+from .importer import CountsError, build as build_contract
 from .report import render_text, to_json
 
-COMMANDS: tuple[str, ...] = ("decide", "diff", "validate", "init", "gates", "eval", "version")
+COMMANDS: tuple[str, ...] = (
+    "decide",
+    "diff",
+    "validate",
+    "import",
+    "init",
+    "gates",
+    "eval",
+    "version",
+)
 
 EXIT_OK = 0
 EXIT_GATE = 2
@@ -112,6 +122,45 @@ def _cmd_validate(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+def _cmd_import(args: argparse.Namespace) -> int:
+    text = Path(args.counts).read_text(encoding="utf-8-sig")
+    data = build_contract(
+        text,
+        product=args.product,
+        min_sample_size=args.min_sample,
+        min_success_rate=args.min_rate,
+        max_harm=args.max_harm,
+        max_cost_per_case=args.max_cost,
+        z=args.z,
+    )
+    # Validate through the same strict loader the rest of the tool uses, so an
+    # import cannot produce a contract that `decide` would reject.
+    contract = contract_from_dict(data)
+    declared = sum(s.volume_share for s in contract.segments)
+    payload = json.dumps(data, ensure_ascii=False, indent=2) + "\n"
+    if args.output:
+        path = Path(args.output)
+        if path.exists() and not args.force:
+            print("refusing to overwrite %s (pass --force)" % path, file=sys.stderr)
+            return EXIT_INPUT
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(payload, encoding="utf-8", newline="\n")
+        print("wrote %s" % path, file=sys.stderr)
+    else:
+        sys.stdout.write(payload)
+    print(
+        "imported %d segments; declared share %.6f, uncovered %.6f%s"
+        % (
+            len(contract.segments),
+            declared,
+            max(0.0, 1.0 - declared),
+            "" if declared else " (no volume_share column: everything is uncovered)",
+        ),
+        file=sys.stderr,
+    )
+    return EXIT_OK
+
+
 def _cmd_init(args: argparse.Namespace) -> int:
     text = json.dumps(TEMPLATE, ensure_ascii=False, indent=2) + "\n"
     if args.output:
@@ -194,6 +243,20 @@ def build_parser() -> argparse.ArgumentParser:
     p_validate.add_argument("--json", action="store_true", help="emit machine-readable JSON")
     p_validate.set_defaults(func=_cmd_validate)
 
+    p_import = sub.add_parser(
+        "import", help="build a contract from a CSV of raw counts (n and successes)"
+    )
+    p_import.add_argument("counts", help="CSV path")
+    p_import.add_argument("--product", required=True, help="what is being released")
+    p_import.add_argument("-o", "--output", default="", help="write here instead of stdout")
+    p_import.add_argument("--force", action="store_true", help="overwrite an existing file")
+    p_import.add_argument("--min-sample", type=int, default=100, dest="min_sample")
+    p_import.add_argument("--min-rate", type=float, default=0.9, dest="min_rate")
+    p_import.add_argument("--max-harm", default="medium", dest="max_harm")
+    p_import.add_argument("--max-cost", type=float, default=0.5, dest="max_cost")
+    p_import.add_argument("--z", type=float, default=1.96)
+    p_import.set_defaults(func=_cmd_import)
+
     p_init = sub.add_parser("init", help="print or write a valid starter contract")
     p_init.add_argument("-o", "--output", default="", help="write to this path instead of stdout")
     p_init.add_argument("--force", action="store_true", help="overwrite an existing file")
@@ -221,6 +284,9 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         return int(args.func(args))
+    except CountsError as exc:
+        print("invalid counts: %s" % exc, file=sys.stderr)
+        return EXIT_INPUT
     except ContractError as exc:
         print("invalid contract: %s" % exc, file=sys.stderr)
         return EXIT_INPUT

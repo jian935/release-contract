@@ -12,6 +12,10 @@ not measured is marked as such.
   reading the schema by hand.
 - Added `validate`: checks structure, enum values and coverage without
   deciding, with `--json` for tooling.
+- Added `import`: builds a contract from a CSV of raw counts (`id`, `n`,
+  `successes`, optional segment fields). A `success_rate` / `accuracy` column
+  is refused with the reason, and unknown columns are errors, so a typo cannot
+  become a silent default. `examples/counts.example.csv` shows the shape.
 - Added `--version` and `version`; `diff --fail-on-regression` returns exit 2
   when any segment got worse.
 - Exit codes are now a documented interface: `0` ok, `2` opted-in gate hit,

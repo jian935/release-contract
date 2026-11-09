@@ -90,6 +90,7 @@ tool could be tuned to look good.
 | command | what it does |
 |---|---|
 | `python -m release_contract.cli init -o contract.json` | write a valid starter contract (n=0, so it decides `HOLD`) |
+| `python -m release_contract.cli import counts.csv --product "checkout v7" -o contract.json` | build a contract from a CSV of raw counts |
 | `python -m release_contract.cli validate contract.json` | check structure and coverage without deciding |
 | `python -m release_contract.cli decide examples/demo_contract.json` | human-readable decision |
 | `python -m release_contract.cli decide examples/demo_contract.json --json` | stable-key JSON for golden diffs |
@@ -109,6 +110,13 @@ when a segment got worse. Exit codes are the pipeline interface:
 | 3 | unusable input: missing file, malformed JSON, or a rejected contract |
 
 An invalid contract prints one line on stderr and exits 3 — never a traceback.
+
+`import` reads `id`, `n`, `successes` plus optional `volume_share`,
+`harm_if_wrong`, `fallback`, `cost_per_case`, `human_review_cost`
+(`examples/counts.example.csv`). A `success_rate` or `accuracy` column is
+**refused with the reason**: a rate without its denominator is the thing this
+tool will not accept. Unknown columns are refused too, so a typo cannot become
+a silent default.
 
 ## Eval sets
 

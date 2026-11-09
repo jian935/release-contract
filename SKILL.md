@@ -56,6 +56,20 @@ python -m release_contract.cli decide contract.json --fail-on FENCE,HOLD
 Never invent counts. If a segment has no evidence, leave `n` small and let
 `G1` return `HOLD`; `HOLD` is an honest answer, `AUTO` on thin evidence is not.
 
+Coming straight from an eval run? `import` turns a CSV of counts into a
+contract without hand-typing JSON:
+
+```bash
+python -m release_contract.cli import counts.csv \
+  --product "checkout-assistant v7" -o contract.json
+```
+
+It needs `id`, `n`, `successes`; `volume_share`, `harm_if_wrong`, `fallback`,
+`cost_per_case`, `human_review_cost` are optional (see
+`examples/counts.example.csv`). A `success_rate` or `accuracy` column is
+refused on purpose — a rate without its denominator cannot be audited, and an
+unknown column is an error so a typo cannot become a silent default.
+
 ## Contract schema
 
 ```json
@@ -171,6 +185,8 @@ python -m release_contract.cli version   # print version
 
 | symptom | cause | fix |
 |---|---|---|
+| `invalid counts: success_rate: a rate without its denominator...` | the CSV carried a rate column | export `n` and `successes` from the eval run instead |
+| `invalid counts: unknown column(s)` | typo or an extra export column | keep only the documented columns |
 | `invalid contract: unknown contract keys` | typo or extra key | run `init` again and diff the key names |
 | `declared volume_share sums to ... > 1.0` | shares double-counted | the denominator is full traffic; lower the shares |
 | everything is `HOLD` | `n` below `min_sample_size` | gather more cases, or lower the bar **and say so** |
