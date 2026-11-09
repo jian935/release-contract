@@ -141,6 +141,9 @@ TRAFFIC (denominator = full traffic 1.0)
 `eval/blind/rounds/round1/answers.csv`，`result.json` 由 `scripts/publish_round.py`
 重新生成——自检会重跑一遍评分，数字漂移就让构建失败。
 
+第 2 轮的空白表在 `eval/blind/next_round/`，连同让第二轮有意义的那几条准入规则。
+它在等一位没看过第 1 轮的读者——沿用同一批案子，标注者间一致性才算得出来。
+
 十条分歧形状完全一致：点估计过了合约下限，Wilson 下界没过，且没有触发其他任何一道闸。
 也**没有任何一条**是「引擎放行、标注者要拦」。所以这个数字应读作**G2 比点估计直觉保守多少**，
 不是准确率。完整表与局限见 `eval/blind/rounds/round1/README.md`。

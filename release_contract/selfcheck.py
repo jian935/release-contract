@@ -475,6 +475,31 @@ def run_checks() -> list[Check]:
         )
     )
 
+    # 18. The round-2 handout must be the same answer-free sheet, still blank.
+    #     Same cases keep inter-annotator agreement computable; a leaked score
+    #     or a pre-filled cell would quietly invalidate the next round.
+    next_sheet = ROOT / "eval" / "blind" / "next_round" / "sheet.csv"
+    next_rows: list[dict] = []
+    next_filled: list[dict] = []
+    next_leaks = False
+    next_synced = False
+    if next_sheet.exists():
+        next_text = next_sheet.read_text(encoding="utf-8-sig", errors="replace")
+        next_rows = list(csv.DictReader(io.StringIO(next_text)))
+        next_filled = [r for r in next_rows if (r.get("你的判定") or "").strip()]
+        next_leaks = any(
+            s in next_text for s in ("1.0000", "0.8928", "0.9011", "0.8507")
+        )
+        next_synced = next_text == rebuilt_single
+    checks.append(
+        _check(
+            "next_round_sheet_ready_and_blank",
+            bool(next_rows) and next_synced and not next_filled and not next_leaks,
+            "rows=%d in_sync=%s filled=%d score_leaks=%s"
+            % (len(next_rows), next_synced, len(next_filled), next_leaks),
+        )
+    )
+
     return checks
 
 

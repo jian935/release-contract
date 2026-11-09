@@ -128,6 +128,7 @@ and the self-check recomputes every published round from its sheet.
 
 ⚠️ **Round 2 must use fresh annotators who have not read `rounds/round1/`.**
 Once answers are public, anyone who has seen them cannot produce a blind
-measurement.
+measurement. A ready-to-hand-out sheet and the admission rules are in
+`next_round/`; the project self-check keeps that sheet blank and in sync.
 
 

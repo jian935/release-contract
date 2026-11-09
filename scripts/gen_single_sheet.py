@@ -58,11 +58,22 @@ def build() -> str:
 
 
 def main() -> int:
+    import argparse
+
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument(
+        "-o",
+        "--out",
+        default=str(OUT),
+        help="target path (default: the round-1 handout)",
+    )
+    args = ap.parse_args()
+    target = Path(args.out)
     text = build()
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(text, encoding="utf-8-sig")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(text, encoding="utf-8-sig")
     row_count = sum(1 for line in text.splitlines() if line.strip()) - 1
-    print("wrote %s" % OUT.relative_to(ROOT))
+    print("wrote %s" % target)
     print("cases with segments: %d rows; answer columns left empty" % row_count)
     return 0
 
