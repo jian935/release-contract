@@ -1,8 +1,11 @@
-# Next batch: cases nobody has annotated
+# Next batch: the second case set
 
 `sheet.csv` is a second, independent packet of **30 contracts / 38 segments**
-that have never been shown to a reader. It is blank. No round has been run on
-it, so it has no agreement figure and none may be quoted.
+built to reach inputs the first set never tested. Round 4 has been scored on it
+and is published in `../rounds/round4/` (**0.8947**, Wilson [0.7587, 0.9583]);
+the filled sheet is archived there as `answers.csv`. This folder keeps the
+answer-free prompts, the generator and a blank copy, so the batch can be
+re-scored and a second reader can still be added.
 
 ## Why a new batch instead of a fourth round on the old one
 
@@ -43,8 +46,8 @@ appears in either.
   and whether readers price `degrade` / `rollback` the way G5 does (only
   `human` has its review cost loaded into the per-case cost).
 - **Cannot:** be compared with rounds 1–3 as if it were the same measurement.
-  These cases were **selected for coverage, not sampled at random**, and the
-  readers have not seen them. A different agreement rate here is expected and is
+  These cases were **selected for coverage, not sampled at random**, and only one
+  reader has answered them. A different agreement rate here is expected and is
   not evidence that the engine got better or worse. Report it as a separate
   number, with this paragraph attached.
 - **Cannot:** say anything about real launch outcomes. Every number is
@@ -90,6 +93,6 @@ sheet must stay blank with the same 15 columns as `../盲评填写表.csv`.
 
 Same as `../next_round/README.md`: do not read `../rounds/`, do not read the
 results section of the project README, do not run the CLI, do not discuss these
-cases with someone who has. This batch is unlabelled, so a reader who has seen
-nothing at all is easy to find — but they must also not see the engine output
-afterwards, or the second round on this batch is contaminated.
+cases with someone who has. Round 4 is published, so a second reader is still
+useful — but they must not read `../rounds/round4/` first, or the two numbers are
+not independent and no kappa can be computed between them.

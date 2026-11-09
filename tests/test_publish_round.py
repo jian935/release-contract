@@ -48,6 +48,18 @@ class TestPublishRound(unittest.TestCase):
         second = self.mod.build(SHEET, 1, "2026-11-09", "x")
         self.assertTrue(first == second)
 
+    def test_result_records_which_prompt_set_it_was_scored_against(self):
+        # Round 4 uses the second batch. Without this field the self-check would
+        # recompute it against the first batch and reject every nb-* row.
+        batch = ROOT / "eval" / "blind" / "next_batch" / "prompts.jsonl"
+        sheet = ROOT / "eval" / "blind" / "rounds" / "round4" / "answers.csv"
+        fresh = self.mod.build(sheet, 4, "2026-11-09", "x", batch)
+        self.assertTrue(fresh["prompts"] == "eval/blind/next_batch/prompts.jsonl")
+        # The default must stay the first batch so no older call site silently
+        # starts scoring against a different question set.
+        default = self.mod.build(SHEET, 1, "2026-11-09", "x")
+        self.assertTrue(default["prompts"] == "eval/blind/prompts.jsonl")
+
     def test_refuses_to_overwrite_a_different_published_result(self):
         with tempfile.TemporaryDirectory(dir=str(ROOT)) as tmp:
             out = Path(tmp) / "result.json"

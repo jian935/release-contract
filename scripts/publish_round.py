@@ -34,6 +34,15 @@ def _load(name: str, relative: str):
     return module
 
 
+def _relative(path: Path) -> str:
+    """Repo-relative when possible, absolute otherwise, so a result records
+    exactly which prompt file it was scored against."""
+    try:
+        return path.resolve().relative_to(ROOT).as_posix()
+    except ValueError:
+        return path.as_posix()
+
+
 def build(
     sheet: Path,
     round_id: int,
@@ -47,11 +56,18 @@ def build(
         raise SystemExit(
             "sheet produced no score (%s); refusing to publish" % scored["status"]
         )
+    prompt_file = (
+        prompts if prompts is not None else ROOT / "eval" / "blind" / "prompts.jsonl"
+    )
     return {
         "round": round_id,
         "date": date,
         "annotator": annotator,
-        "sheet": sheet.relative_to(ROOT).as_posix(),
+        "sheet": _relative(sheet),
+        # Without this, a later round over a different question set cannot be
+        # recomputed: the self-check would score it against the first batch and
+        # every case id would look unknown.
+        "prompts": _relative(prompt_file),
         "agreement": scored["agreement"],
         "wilson95_ci": scored["wilson95_ci"],
         "scored_segments": scored["scored_segments"],

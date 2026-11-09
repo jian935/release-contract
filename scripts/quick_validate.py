@@ -6,6 +6,7 @@ Usage: python scripts/quick_validate.py
 
 from __future__ import annotations
 
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -59,8 +60,22 @@ def main() -> int:
         sorted(p for p in rounds_dir.glob("*/answers.csv")) if rounds_dir.is_dir() else []
     )
     if published:
-        blind_args.append(published[-1].relative_to(ROOT).as_posix())
-        note = "  (published round: %s)" % published[-1].parent.name
+        latest = published[-1]
+        blind_args.append(latest.relative_to(ROOT).as_posix())
+        note = "  (published round: %s)" % latest.parent.name
+        # A round may be scored against a different question set. Scoring it
+        # against the default prompts rejects every row, so read the set the
+        # result was published with.
+        frozen = latest.parent / "result.json"
+        declared = None
+        if frozen.exists():
+            try:
+                declared = json.loads(frozen.read_text(encoding="utf-8")).get("prompts")
+            except ValueError:
+                declared = None
+        if declared:
+            blind_args.extend(["--prompts", declared])
+            note += " scored against %s" % declared
     else:
         for candidate in ("eval/blind/answer_sheet.csv", "eval/blind/annotations.jsonl"):
             if (ROOT / candidate).exists():

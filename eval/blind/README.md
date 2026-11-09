@@ -1,20 +1,22 @@
 # Blind evaluation protocol
 
-**Three rounds are published, each with the sheet it was scored from.**
+**Four rounds are published, each with the sheet it was scored from.**
 
-| round | agreement | Wilson 95% | disagreements | reader's success floor |
+| round | case set | agreement | Wilson 95% | disagreements |
 |---|---|---|---|---|
-| 1 | **0.8507** | [0.7466, 0.9169] | 10, all Wilson-class | point estimate |
-| 2 | **0.9403** | [0.8563, 0.9765] | 4, all rule-class | Wilson lower bound |
-| 3 | **0.7910** | [0.6793, 0.8712] | 14 = 10 Wilson + 4 rule | point estimate |
+| 1 | first, 67 segs | **0.8507** | [0.7466, 0.9169] | 10, all Wilson-class |
+| 2 | first, 67 segs | **0.9403** | [0.8563, 0.9765] | 4, all rule-class |
+| 3 | first, 67 segs | **0.7910** | [0.6793, 0.8712] | 14 = 10 Wilson + 4 rule |
+| 4 | **second, 38 segs** | **0.8947** | [0.7587, 0.9583] | 4, all one new rule question |
 
 Every rate is recomputed from `rounds/roundN/answers.csv` by
 `scripts/publish_round.py` and re-verified by the project self-check.
 
-**The three numbers are one engine measured against three readers, not three
-independent scores.** Across all 37 disagreements in all three rounds, every one
-falls into one of two rule questions and **none is unexplained**. The rates are
-exactly `1 - 10/67`, `1 - 4/67` and `1 - 14/67`:
+**Rounds 1–3 are one engine against three readers on the same 67 fabricated
+segments. Round 4 is a different 38-segment set and must not be subtracted from
+them, averaged with them, or read as a trend.** Across all 37 disagreements in
+rounds 1–3, every one falls into one of two rule questions and **none is
+unexplained**. The rates are exactly `1 - 10/67`, `1 - 4/67` and `1 - 14/67`:
 
 - **Wilson-class:** observed rate clears the floor, lower bound does not, no other
   gate violated — 10 fixed cases. A reader who reasons on the point estimate
@@ -29,6 +31,26 @@ Pairwise reader agreement, same 67 segments: 1↔2 raw 0.7910 / kappa 0.6554,
 Do not quote any single rate as "accuracy": reader 1 and reader 3 agree tightly
 with each other because they share a reading, and reader 2 dissents from the
 engine only on the rule axis. Per-round detail: `rounds/roundN/README.md`.
+
+### Round 4: the second case set found a third rule question
+
+The 30 new cases in `next_batch/` were built to reach inputs the first set never
+tested. One reader scored them at **0.8947** (34/38), and all four disagreements
+are the same design choice seen twice:
+
+- **G4's floor.** It fires from `high` up; the reader wants a human fallback from
+  `medium` up. Only `nb-01` can show that difference.
+- **What counts as a fallback.** G4 fires only on `none`, so `degrade` and
+  `rollback` count as contained damage; the reader accepts neither. Related: G5
+  loads `human_review_cost` only for `human`, so a 0.6 review cost on a
+  degrade segment is priced at 0.02 against a 0.5 cap.
+
+Simulated cost of adopting either reading: the G4 floor change flips 0 segments
+in rounds 1–3 and 1 here; counting degrade/rollback as no fallback flips 1
+(`ho-010/at_ceiling`) and 3 here. **Neither is implemented**, because adopting
+both would make this round agree 38/38 — a rule tuned until it matches the person
+who annotated it has validated nothing. Recorded as open question 3 in
+`DESIGN.md`.
 
 ## Why this exists
 
@@ -124,6 +146,7 @@ accuracy figure leaks into any file an annotator sees.
 | 1 (2026-11-09) | one reader, no second reviewer | `rounds/round1/answers.csv`, every segment decided | yes — `rounds/round1/` | 0.8507; every disagreement is gate G2 |
 | 2 (2026-11-09) | a different reader, declared no access to round 1 or this repo | `rounds/round2/answers.csv`, every segment decided | yes — `rounds/round2/` | 0.9403; four disagreements, all rule precedence |
 | 3 (2026-11-09) | a third reader, declared no access to any published round | `rounds/round3/answers.csv`, every segment decided | yes — `rounds/round3/` | 0.7910; ten G2 plus the same four rule cases |
+| 4 (2026-11-09) | a fourth reader, declared no access to `rounds/` | `rounds/round4/answers.csv`, **second case set**, every segment decided | yes — `rounds/round4/` | 0.8947 on 38 new segments; four disagreements, one new rule question |
 
 The scoring script labels each disagreement with its cause
 (`wilson_lower_below_floor_but_point_estimate_above` versus
@@ -178,11 +201,11 @@ distribution: kappa from n=2 has no interval.
 `next_batch/` is the packet for the round after that. It carries **new cases, not
 new readers on the same cases**: three readers exhausted the first 67 segments,
 and a fourth reader on them buys one kappa point rather than a new rule
-question. It has its own `prompts.jsonl`, its own blank `sheet.csv` with the
-same columns, and no agreement figure — nothing has been annotated. Score it with
-`blind_eval.py --prompts eval/blind/next_batch/prompts.jsonl`; without that flag
-the script reads the first batch and rejects every row, which is deliberate. Its
-cases were **selected for coverage, not sampled**, so its rate must never be
-subtracted from the earlier ones or presented as a trend.
+question. It has its own `prompts.jsonl` and its own blank `sheet.csv` with the
+same columns. Round 4 is published on it (`rounds/round4/`). Score a returned
+sheet with `blind_eval.py --prompts eval/blind/next_batch/prompts.jsonl`; without
+that flag the script reads the first batch and rejects every row, which is
+deliberate. Its cases were **selected for coverage, not sampled**, so its rate
+must never be subtracted from the earlier ones or presented as a trend.
 
 

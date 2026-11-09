@@ -1,0 +1,49 @@
+{
+  "agreement": 0.8947,
+  "annotated_cases": 30,
+  "annotator": "fourth reader, independent of the first three; declared not to have read eval/blind/rounds/",
+  "compared_with": "engine verdicts, not author-written golden labels",
+  "correct": 34,
+  "date": "2026-11-09",
+  "disagreement_causes": {
+    "other_gate_or_judgement": 4
+  },
+  "disagreements": [
+    {
+      "annotator": "FENCE",
+      "case": "nb-01",
+      "cause": "other_gate_or_judgement",
+      "engine": "AUTO",
+      "segment": "faq-bot"
+    },
+    {
+      "annotator": "FENCE",
+      "case": "nb-07",
+      "cause": "other_gate_or_judgement",
+      "engine": "AUTO",
+      "segment": "billing-recon"
+    },
+    {
+      "annotator": "FENCE",
+      "case": "nb-08",
+      "cause": "other_gate_or_judgement",
+      "engine": "AUTO",
+      "segment": "orders-sync"
+    },
+    {
+      "annotator": "FENCE",
+      "case": "nb-11",
+      "cause": "other_gate_or_judgement",
+      "engine": "AUTO",
+      "segment": "claims-triage"
+    }
+  ],
+  "prompts": "eval/blind/next_batch/prompts.jsonl",
+  "round": 4,
+  "scored_segments": 38,
+  "sheet": "eval/blind/rounds/round4/answers.csv",
+  "wilson95_ci": [
+    0.7587,
+    0.9583
+  ]
+}

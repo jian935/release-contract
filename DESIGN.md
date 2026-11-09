@@ -159,6 +159,36 @@ they need a deliberate decision and a full re-run, not a quiet edit.
   disputed (`python scripts/whatif_rules.py`). Unlike the harm-ceiling question,
   this one is cheap in verdicts; it is expensive only in published numbers.
 
+### 3. Is `degrade` / `rollback` a fallback, and from which harm rank does G4 require one?
+
+- **Evidence:** `rounds/round4` — the first round on the second case set. One
+  reader, four disagreements, all `FENCE` against the engine's `AUTO`, all on
+  this question: `nb-01` (medium harm, no fallback), `nb-07` and `nb-08` (high
+  harm with `degrade` / `rollback` and a 0.6 review cost), `nb-11` (critical harm
+  with `degrade`).
+- **Position today:** G4 fires only when harm is `high` or above *and* fallback is
+  exactly `none`; `degrade` and `rollback` count as contained damage. G5 loads
+  `human_review_cost` only for `fallback=human`, so a degrade segment carrying a
+  0.6 review cost is priced at its 0.02 model cost against a 0.5 cap.
+- **Counter-position:** a rollback contains the blast radius but does not catch
+  the wrong answer. If a human has to read the degraded output, the cost is real
+  and the realised harm is unchanged. Under that reading the floor should be
+  `medium` and only `human` should count.
+- **What would settle it:** a launch where degrade/rollback segments show a
+  realised harm rate materially different from their declared `harm_if_wrong`.
+  Until then this is a question about what "contained" means, not about data.
+- **Measured cost today:** the floor change (high → medium) flips **0** of the 67
+  segments in rounds 1–3 and **1** here (`nb-01`); counting degrade/rollback as
+  no fallback flips **1** (`ho-010/at_ceiling`) and **3** (`nb-07`, `nb-08`,
+  `nb-11`). Recomputed from the sheets; neither change is implemented.
+- **Why it is not adopted on this evidence:** adopting both would make round 4
+  agree **38/38**. A rule tuned until it matches the person who annotated it
+  validates nothing — the 1.0000 would be an artefact of the edit, not a
+  measurement.
+- **Evidence strength:** weaker than questions 1 and 2. Those have three readers
+  on the same cases; this has one reader on cases chosen to probe it. It is a
+  question raised, not a position won.
+
 Two readers out of three now dissent on both questions, in the same direction,
 and they reached it independently (round 3 used the point estimate, round 2 the
 lower bound, so the two rule answers are not an artefact of one reading). That is

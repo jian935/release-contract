@@ -32,6 +32,9 @@ SCORE_LEAKS = (
     "0.7910",  # blind round 3
     "0.6793",
     "0.8712",
+    "0.8947",  # blind round 4 (second batch, not comparable to rounds 1-3)
+    "0.7587",
+    "0.9583",
 )
 PERSONAL_EMAIL = re.compile(
     r"\b[\w.+-]+@(?:qq|163|126|gmail|outlook|foxmail|sina|sohu)\.com\b", re.I
@@ -346,7 +349,23 @@ def run_checks() -> list[Check]:
             except ValueError as exc:
                 problems.append("%s: result.json is not valid JSON (%s)" % (folder.name, exc))
                 continue
-            live = be.run(sheet)
+            # A round may be scored against a different question set. The
+            # result records which one; without that, recomputing round 4
+            # against the first batch's prompts reports every id as unknown.
+            prompt_path = ROOT / "eval" / "blind" / "prompts.jsonl"
+            declared = published.get("prompts")
+            if declared:
+                declared_path = Path(declared)
+                prompt_path = (
+                    declared_path if declared_path.is_absolute() else ROOT / declared_path
+                )
+                if not prompt_path.exists():
+                    problems.append(
+                        "%s: declared prompts file is missing (%s)"
+                        % (folder.name, declared)
+                    )
+                    continue
+            live = be.run(sheet, prompt_path)
             if live["status"] != "measured":
                 problems.append("%s: sheet yields no score" % folder.name)
                 continue
