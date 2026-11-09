@@ -1,11 +1,16 @@
-# Next round packet (ready to hand out)
+# Next round packet
 
-Rounds 1 and 2 are published. This folder holds the blank sheet for the **next**
-reader: 67 segments from the same 50 cases, all judgement columns empty.
+Rounds 1, 2 and 3 are published, all on the same 67 segments. This folder still
+holds a blank sheet for those cases, because a fourth reader is cheap and gives
+one more kappa point.
 
-Same cases on purpose — that is what makes inter-annotator agreement computable.
-A third reader on new cases would add breadth; a third reader on these cases adds
-a third kappa point.
+**But the same-case well is nearly dry.** Three readers already pin the two rule
+questions at 2 to 1, and every disagreement in 37 has been accounted for. A
+fourth reader on these exact cases adds a band point and very little
+information. The next round worth running is **new cases nobody has seen** —
+that is the only thing that can reveal a rule question the current 50 cases do
+not contain. Do that by generating a fresh answer-free packet from a new suite,
+not by re-using this sheet.
 
 ## Admission rules (read before opening the sheet)
 
@@ -48,11 +53,11 @@ would fence that the tool releases is the finding this exercise exists for.
 python scripts/blind_eval.py path/to/returned.csv
 
 # 2. freeze it as the next round, with an honest annotator declaration
-python scripts/publish_round.py --round 3 \
-  --sheet eval/blind/rounds/round3/answers.csv \
-  --out   eval/blind/rounds/round3/result.json \
+python scripts/publish_round.py --round 4 \
+  --sheet eval/blind/rounds/round4/answers.csv \
+  --out   eval/blind/rounds/round4/result.json \
   --date  YYYY-MM-DD \
-  --annotator "third reader; declared not to have seen any published round"
+  --annotator "fourth reader; declared not to have seen any published round"
 ```
 
 The declaration must state what the annotator had and had not seen. The
@@ -76,9 +81,7 @@ different questions.
 
 ## What another round can and cannot settle
 
-- **Can:** whether the two published disagreement patterns are properties of the
-  tool or habits of two people. Round 2 already moved the contested point from
-  gate G2 to rule precedence, which is why the open questions in `DESIGN.md` are
-  the ones worth a third reader's attention.
+- **Can:** on new cases, whether there is a *third* rule question hiding behind
+  the two already documented. On these cases, only a fourth kappa point.
 - **Cannot:** whether the gates match real launch outcomes. Only real launch
   data answers that, and this repository has none.

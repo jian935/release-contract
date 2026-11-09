@@ -114,9 +114,10 @@ they need a deliberate decision and a full re-run, not a quiet edit.
 
 ### 1. Does an existing human fallback relax the harm ceiling?
 
-- **Evidence:** `rounds/round2` dev-008 and dev-009. The reader saw `harm=high`
-  (and `critical`) against a `medium` ceiling, noticed a human fallback was
-  configured, and answered `AUTO`; the engine answers `FENCE` via G3.
+- **Evidence:** `rounds/round2` and `rounds/round3` dev-008 and dev-009. Both
+  readers saw `harm=high` (and `critical`) against a `medium` ceiling, noticed a
+  human fallback was configured, and answered `AUTO`; the engine answers `FENCE`
+  via G3. Round 1 answered `FENCE`, so the split is 2 to 1 against the engine.
 - **Position today:** the ceiling is absolute. It describes how bad being wrong
   is; a fallback changes who catches it, not how bad it is.
 - **Counter-position:** if every error is caught by a human anyway, the realised
@@ -138,9 +139,10 @@ they need a deliberate decision and a full re-run, not a quiet edit.
 
 ### 2. When evidence is thin *and* a hard ceiling is violated, `HOLD` or `FENCE`?
 
-- **Evidence:** `rounds/round2` dev-020 and ho-020. `n=50` (and `n=10`) against a
-  `min_sample_size` of 100, *plus* a critical harm with no fallback. G1 fires
-  first, so the engine says `HOLD`; the reader said `FENCE`.
+- **Evidence:** `rounds/round2` and `rounds/round3` dev-020 and ho-020. `n=50`
+  (and `n=10`) against a `min_sample_size` of 100, *plus* a critical harm with no
+  fallback. G1 fires first, so the engine says `HOLD`; both readers said `FENCE`.
+  Round 1 said `HOLD`, so again 2 to 1 against the engine.
 - **Why the reader may be right:** more data cannot fix an absolute ceiling
   violation. Telling someone `HOLD` sends them off to collect samples that cannot
   change the answer.
@@ -157,8 +159,15 @@ they need a deliberate decision and a full re-run, not a quiet edit.
   disputed (`python scripts/whatif_rules.py`). Unlike the harm-ceiling question,
   this one is cheap in verdicts; it is expensive only in published numbers.
 
-Neither question justifies changing the engine on the strength of one reader.
-The second one does justify a documentation fix, which is in place: `HOLD` is
+Two readers out of three now dissent on both questions, in the same direction,
+and they reached it independently (round 3 used the point estimate, round 2 the
+lower bound, so the two rule answers are not an artefact of one reading). That is
+no longer "one reader's opinion", but it is still not a reason to patch the
+engine inside a release: the decision has a measured cost, a documented
+consequence (every published round would be re-scored), and belongs to whoever
+owns the tool's semantics.
+
+The second question does justify a documentation fix, which is in place: `HOLD` is
 described as "not enough evidence", never as "safe to ship".
 
 ## What would change these decisions

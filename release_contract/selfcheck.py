@@ -29,6 +29,9 @@ SCORE_LEAKS = (
     "0.7466",
     "0.9403",  # blind round 2
     "0.8563",
+    "0.7910",  # blind round 3
+    "0.6793",
+    "0.8712",
 )
 PERSONAL_EMAIL = re.compile(
     r"\b[\w.+-]+@(?:qq|163|126|gmail|outlook|foxmail|sina|sohu)\.com\b", re.I

@@ -1,20 +1,34 @@
 # Blind evaluation protocol
 
-**Two rounds are published, both with their sheets.**
+**Three rounds are published, each with the sheet it was scored from.**
 
-| round | agreement | Wilson 95% | disagreements |
-|---|---|---|---|
-| 1 | **0.8507** | [0.7466, 0.9169] | 10, all gate G2 |
-| 2 | **0.9403** | [0.8563, 0.9765] | 4, all rule-precedence |
+| round | agreement | Wilson 95% | disagreements | reader's success floor |
+|---|---|---|---|---|
+| 1 | **0.8507** | [0.7466, 0.9169] | 10, all Wilson-class | point estimate |
+| 2 | **0.9403** | [0.8563, 0.9765] | 4, all rule-class | Wilson lower bound |
+| 3 | **0.7910** | [0.6793, 0.8712] | 14 = 10 Wilson + 4 rule | point estimate |
 
-Both rates are recomputed from `rounds/roundN/answers.csv` by
-`scripts/publish_round.py` and re-verified by the project self-check. Reader-vs-reader
-agreement on the same 67 segments is **0.791 raw, Cohen's kappa 0.6554**
-(`scripts/compare_rounds.py`) — so the gap between 0.8507 and 0.9403 is mostly
-reader variance, not engine variance.
+Every rate is recomputed from `rounds/roundN/answers.csv` by
+`scripts/publish_round.py` and re-verified by the project self-check.
 
-Do not quote 0.9403 alone as "accuracy": it is one reader's agreement with a
-deterministic rule set, and the other reader of the same cases scored 0.8507.
+**The three numbers are one engine measured against three readers, not three
+independent scores.** Across all 37 disagreements in all three rounds, every one
+falls into one of two rule questions and **none is unexplained**. The rates are
+exactly `1 - 10/67`, `1 - 4/67` and `1 - 14/67`:
+
+- **Wilson-class:** observed rate clears the floor, lower bound does not, no other
+  gate violated — 10 fixed cases. A reader who reasons on the point estimate
+  produces all 10; a reader who uses the lower bound produces none.
+- **Rule-class:** 4 fixed cases, the two open questions in `DESIGN.md` (does a
+  human fallback relax the harm ceiling; `HOLD` or `FENCE` when evidence is thin
+  *and* a hard ceiling is violated).
+
+Pairwise reader agreement, same 67 segments: 1↔2 raw 0.7910 / kappa 0.6554,
+1↔3 raw 0.9403 / kappa **0.8929**, 2↔3 raw 0.8507 / kappa 0.7498.
+
+Do not quote any single rate as "accuracy": reader 1 and reader 3 agree tightly
+with each other because they share a reading, and reader 2 dissents from the
+engine only on the rule axis. Per-round detail: `rounds/roundN/README.md`.
 
 ## Why this exists
 
@@ -109,6 +123,7 @@ accuracy figure leaks into any file an annotator sees.
 |---|---|---|---|---|
 | 1 (2026-11-09) | one reader, no second reviewer | `rounds/round1/answers.csv`, every segment decided | yes — `rounds/round1/` | 0.8507; every disagreement is gate G2 |
 | 2 (2026-11-09) | a different reader, declared no access to round 1 or this repo | `rounds/round2/answers.csv`, every segment decided | yes — `rounds/round2/` | 0.9403; four disagreements, all rule precedence |
+| 3 (2026-11-09) | a third reader, declared no access to any published round | `rounds/round3/answers.csv`, every segment decided | yes — `rounds/round3/` | 0.7910; ten G2 plus the same four rule cases |
 
 The scoring script labels each disagreement with its cause
 (`wilson_lower_below_floor_but_point_estimate_above` versus
@@ -128,9 +143,16 @@ Wilson lower bound independently (12 of their rationales quote it, all matching
    `FENCE`, which is arguably more useful because more data will not fix an
    absolute ceiling violation.
 
-Both are open questions in `DESIGN.md`. Neither is being patched to match a
-reader: that would be fitting the rule to one annotator, and it would invalidate
-every published round.
+**Round 3 made both questions 2-of-3.** This reader used the point estimate (so
+it reproduced round 1's ten G2 disagreements) *and* took the same side as round 2
+on both rule questions, giving 14 = 10 + 4 and a clean decomposition with no
+residual. Readers 1 and 3 differ on exactly the four rule cases; kappa 0.8929.
+
+Both questions remain open in `DESIGN.md`, and the split is now explicit: the
+engine is on the minority side of each. They are still not being patched on the
+strength of two readers — changing verdict precedence invalidates every published
+round — but the decision now has a measured cost (`scripts/whatif_rules.py`)
+instead of being a matter of taste.
 
 ## Publishing a round
 

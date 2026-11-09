@@ -5,6 +5,22 @@ not measured is marked as such.
 
 ## Unreleased
 
+- Published blind round 3 under `eval/blind/rounds/round3/`: agreement **0.7910**,
+  Wilson 95% [0.6793, 0.8712] over the same 67 segments. This reader used the
+  point estimate (like round 1) and took the same side as round 2 on both rule
+  questions, so its 14 disagreements are exactly 10 Wilson-class + 4 rule-class.
+- With three readers, **every one of the 37 disagreements across all rounds now
+  falls into one of two rule questions, with zero unexplained**. The three rates
+  are exactly `1 - 10/67`, `1 - 4/67`, `1 - 14/67`; pairwise kappa is 0.6554 /
+  0.8929 / 0.7498. Documented as the primary result in `eval/blind/README.md`
+  and each round record.
+- Both open rule questions are now **2 of 3 readers against the engine**, reached
+  independently from different statistical readings. Still not patched: the cost
+  and the consequence are recorded in `DESIGN.md`, and changing precedence would
+  re-score every published round.
+- `eval/blind/next_round/README.md` now says the same-case well is nearly dry: a
+  fourth reader on these 67 segments adds a kappa point, while the useful next
+  round is **new cases nobody has seen**.
 - Added `scripts/whatif_rules.py`: prices the two open rule questions from the
   blind rounds in verdicts rather than opinions. Lowering effective harm one rank
   for a configured fallback would move 3 of the 67 published segments from
