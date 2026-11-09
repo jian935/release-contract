@@ -3,6 +3,13 @@
 Numbers here are measurements from this repository, not marketing. Anything
 not measured is marked as such.
 
+## Unreleased
+
+- The README animation is now `assets/demo.gif`, rendered from real stdout by
+  `scripts/render_demo_gif.py`. A SHA-256 sidecar lets the self-check fail when
+  the engine changes without re-rendering — it is a rendering, not a screen
+  capture, and it says so in both the README and the sidecar.
+
 ## 0.2.0 — 2026-11-09
 
 **Usable as a skill, not just a script.**

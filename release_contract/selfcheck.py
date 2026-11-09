@@ -500,21 +500,34 @@ def run_checks() -> list[Check]:
         )
     )
 
-    # 19. The README image must be re-renderable from the current engine.
-    #     A screenshot that outlives its code is the same lie as a stale number.
-    svg_spec = importlib.util.spec_from_file_location(
-        "render_demo_svg", ROOT / "scripts" / "render_demo_svg.py"
-    )
-    svg_mod = importlib.util.module_from_spec(svg_spec)
-    svg_spec.loader.exec_module(svg_mod)
-    live_svg = svg_mod.build()
-    shipped_svg = _read(ROOT / "assets" / "demo.svg")
+    # 19. The README animation must be derivable from the current engine.
+    #     A hash sidecar is used instead of re-rendering the GIF, so this check
+    #     needs no Pillow and runs on every CI interpreter. A screenshot that
+    #     outlives its code is the same lie as a stale number.
+    import hashlib
+
+    from .engine import decide, load_contract  # local import: keeps top clean
+    from .report import render_text
+
+    live_text = render_text(decide(load_contract(ROOT / "examples" / "demo_contract.json")))
+    live_hash = hashlib.sha256(live_text.encode("utf-8")).hexdigest()
+    recorded = ""
+    try:
+        meta = _json.loads(_read(ROOT / "assets" / "demo.gif.json"))
+        recorded = str(meta.get("source_sha256", ""))
+    except ValueError:
+        recorded = ""
+    gif_present = (ROOT / "assets" / "demo.gif").exists()
     checks.append(
         _check(
             "demo_asset_matches_live_output",
-            bool(shipped_svg) and shipped_svg == live_svg,
-            "assets/demo.svg is %s"
-            % ("in sync" if shipped_svg == live_svg else "stale; rerun scripts/render_demo_svg.py"),
+            gif_present and recorded == live_hash,
+            "assets/demo.gif %s"
+            % (
+                "is in sync"
+                if gif_present and recorded == live_hash
+                else "is stale or missing; rerun scripts/render_demo_gif.py"
+            ),
         )
     )
 

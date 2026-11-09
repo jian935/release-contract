@@ -1,0 +1,8 @@
+{
+  "bytes": 698907,
+  "frames": 31,
+  "note": "Rendered from real CLI stdout; not a screen capture.",
+  "rendered_with": "scripts/render_demo_gif.py",
+  "source": "examples/demo_contract.json",
+  "source_sha256": "3ee7fdf1a45e832807d3162ef684c7097a5a1d6e8454dc1f81ac5a33eea70f0a"
+}

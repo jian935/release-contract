@@ -202,7 +202,7 @@ python -m release_contract.cli version   # print version
 | `release_contract/diff.py` | version-to-version segment diff |
 | `release_contract/properties.py` | invariant scan that needs no golden labels |
 | `examples/` | fabricated demo contracts (labelled SYNTHETIC) |
-| `assets/demo.svg` | the README image, re-rendered from live output by `scripts/render_demo_svg.py` |
+| `assets/demo.gif` | the README animation, rendered from live stdout by `scripts/render_demo_gif.py` (not a screen capture) |
 | `eval/` | self-built dev/hold-out suites and the blind protocol |
 
 ## Boundaries (read before citing any number)

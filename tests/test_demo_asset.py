@@ -1,49 +1,68 @@
-"""The README image is generated, not screenshotted.
+"""The README animation is rendered from real stdout, not screenshotted.
 
-If these fail after an engine change, rerun `python scripts/render_demo_svg.py`
-rather than editing the SVG by hand.
+The image itself needs Pillow to regenerate, which not every CI interpreter has.
+So the check that survives everywhere is a hash sidecar: it records the SHA-256
+of the text the GIF was built from, and any engine change breaks it until the
+image is re-rendered.
 """
 
 from __future__ import annotations
 
+import hashlib
 import importlib.util
+import json
 import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SVG = ROOT / "assets" / "demo.svg"
+GIF = ROOT / "assets" / "demo.gif"
+SIDECAR = ROOT / "assets" / "demo.gif.json"
+
+from release_contract.engine import decide, load_contract  # noqa: E402
+from release_contract.report import render_text  # noqa: E402
 
 
-def _load():
-    spec = importlib.util.spec_from_file_location(
-        "render_demo_svg", ROOT / "scripts" / "render_demo_svg.py"
-    )
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
+def _live_hash() -> str:
+    text = render_text(decide(load_contract(ROOT / "examples" / "demo_contract.json")))
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
 class TestDemoAsset(unittest.TestCase):
+    def test_sidecar_matches_current_output(self):
+        meta = json.loads(SIDECAR.read_text(encoding="utf-8"))
+        self.assertTrue(meta["source_sha256"] == _live_hash())
+
+    def test_gif_is_a_real_gif(self):
+        data = GIF.read_bytes()
+        self.assertTrue(data[:6] in (b"GIF89a", b"GIF87a"))
+        self.assertTrue(len(data) > 20_000)
+
+    def test_sidecar_declares_it_is_not_a_capture(self):
+        meta = json.loads(SIDECAR.read_text(encoding="utf-8"))
+        self.assertTrue("not a screen capture" in meta["note"].lower())
+
+    def test_renderer_exists(self):
+        self.assertTrue((ROOT / "scripts" / "render_demo_gif.py").exists())
+
+
+class TestRenderer(unittest.TestCase):
     def setUp(self):
-        self.mod = _load()
+        try:
+            import PIL  # noqa: F401
+        except ImportError:
+            self.skipTest("Pillow not installed")
 
-    def test_shipped_svg_matches_a_fresh_render(self):
-        shipped = SVG.read_text(encoding="utf-8")
-        self.assertTrue(shipped == self.mod.build())
-
-    def test_render_is_deterministic(self):
-        self.assertTrue(self.mod.build() == self.mod.build())
-
-    def test_render_contains_the_real_decision_not_a_mock(self):
-        svg = self.mod.build()
-        self.assertTrue("TRAFFIC" in svg)
-        self.assertTrue("AUTO" in svg and "FENCE" in svg and "HOLD" in svg)
-        self.assertTrue("uncovered" in svg)
-
-    def test_render_is_valid_xml(self):
-        import xml.etree.ElementTree as ET
-
-        ET.fromstring(SVG.read_text(encoding="utf-8"))
+    def test_render_is_deterministic_and_carries_the_hash(self):
+        spec = importlib.util.spec_from_file_location(
+            "render_demo_gif", ROOT / "scripts" / "render_demo_gif.py"
+        )
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        first, meta_a = module.build()
+        second, meta_b = module.build()
+        self.assertTrue(first == second)
+        self.assertTrue(meta_a["source_sha256"] == _live_hash())
+        self.assertTrue(meta_a["source_sha256"] == meta_b["source_sha256"])
 
 
 if __name__ == "__main__":
