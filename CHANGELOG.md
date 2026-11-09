@@ -5,6 +5,28 @@ not measured is marked as such.
 
 ## Unreleased
 
+- Added `scripts/whatif_rules.py`: prices the two open rule questions from the
+  blind rounds in verdicts rather than opinions. Lowering effective harm one rank
+  for a configured fallback would move 3 of the 67 published segments from
+  `FENCE` to `AUTO`; letting a hard violation outrank `G1` would move 2 from
+  `HOLD` to `FENCE`. Neither is implemented, and `tests/test_whatif_rules.py`
+  holds each scenario to its direction.
+- **Fixed a silent release path:** a `NaN` cost used to pass every comparison
+  (`NaN >= 0` is False, `NaN > limit` is also False) and the segment came back
+  `AUTO`. Non-finite numbers are now refused at parse time and in the loader,
+  and `nan` / `inf` in a counts CSV is rejected with the row number.
+- Numeric fields are type-checked before arithmetic: `"n": "200"` used to
+  surface as `'<' not supported between instances of 'str' and 'int'`, and
+  `"n": true` slipped through because `isinstance(True, int)` is True.
+- A UTF-8 BOM in front of a contract is now tolerated instead of failing with
+  "Unexpected UTF-8 BOM" — Excel and Notepad add one.
+- `decide --json` now echoes the effective `guardrails`, so a decision records
+  the thresholds it was made under even when the block was omitted.
+- New advisory risk flag `success_floor_is_zero`: a `min_success_rate` of 0 makes
+  gate G2 vacuous, so the decision says so instead of looking like a pass.
+- Added `tests/test_bad_input.py` (19 cases) fixing what must be rejected, what
+  is accepted on purpose, and that every bad contract exits 3 without a
+  traceback.
 - Added `scripts/check_rollback_baseline.py` and `release_contract/launch.py`:
   the post-launch half of the trigger promise. It replays a launch log against
   the baselines `decide` recorded, window by window. A partial window never

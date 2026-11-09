@@ -16,6 +16,7 @@ def to_dict(decision: Decision) -> dict[str, Any]:
     """JSON-serialisable, stable key order -- suitable for golden diffs in CI."""
     return {
         "product": decision.product,
+        "guardrails": dict(decision.guardrails),
         "segments": [
             {
                 "id": s.id,

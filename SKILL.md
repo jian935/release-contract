@@ -130,6 +130,20 @@ Unknown keys are rejected on purpose: a typo must not silently become a
 default. Declared shares may sum to less than 1.0 — the remainder is reported
 as `uncovered`, never dropped. Claiming more than 1.0 is refused.
 
+Three rules that are easy to trip over:
+
+- **Numbers must be finite.** `NaN` and `Infinity` are refused at parse time.
+  They are not pedantry: `NaN` compares False against every threshold, so a NaN
+  cost would sail through the cost gate and release the segment.
+- **Counts are integers, not strings or booleans.** `"n": "200"` and
+  `"n": true` are rejected with a readable message rather than a Python error.
+- **`guardrails` may be omitted** and then takes the documented defaults above.
+  Whatever is in force is echoed in `decide --json` under `guardrails`, so a
+  decision always records the thresholds it was made under. A BOM in front of
+  the JSON is tolerated (Excel and Notepad add one); a `min_success_rate` of
+  `0` is obeyed but flagged as `success_floor_is_zero`, because it makes gate G2
+  vacuous.
+
 ## The six gates
 
 | gate | effect |
@@ -190,6 +204,11 @@ python -m release_contract.cli version   # print version
   still be fenced because the 1% is unrecoverable.
 - If a reviewer disagrees with `G2` itself (they want point-estimate
   semantics), that is a **scope disagreement**, not a bug. Say so and stop.
+- The gate list shows **every** gate that failed, while the verdict comes from
+  the primary one. A `HOLD` segment can therefore still list a `FENCE`-class
+  gate — most visibly on a fresh `init`, where `n=0` fails `G1` (no evidence)
+  and `G2` (0.0 below the floor) at the same time. Read the verdict, then read
+  the gates to see why.
 - `diff` compares two contracts; if the guardrails changed too, the comparison
   is not apples to apples — check `guardrails` first.
 
@@ -215,6 +234,8 @@ python -m release_contract.cli version   # print version
 | `release_contract/properties.py` | invariant scan that needs no golden labels |
 | `examples/` | fabricated demo contracts (labelled SYNTHETIC) |
 | `examples/launch/` | synthetic runtime log and the post-launch baseline check, wired end to end |
+| `DESIGN.md` | each decision beside the alternative it beat, plus two open rule questions and their measured cost |
+| `scripts/whatif_rules.py` | prices those two open questions in verdicts; implements neither |
 | `assets/demo-recording.gif` | a real screen capture of one demo run; `assets/demo-recording.json` carries its hash |
 | `assets/demo.gif` | the README animation, rendered from live stdout by `scripts/render_demo_gif.py` (not a screen capture) |
 | `eval/` | self-built dev/hold-out suites and the blind protocol |

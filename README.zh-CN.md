@@ -156,6 +156,8 @@ TRAFFIC (denominator = full traffic 1.0)
   **不完整的窗口永不触发**、正常窗口会把连续计数清零、日志里从未出现的分片报
   `no observations` 而不是当作健康。`--fail-on-trigger` 触发时退出码 2，可接流水线。
   完整示例见 `examples/launch/`。
+- `python scripts/whatif_rules.py` 把 `DESIGN.md` 里那两个待决规则问题换算成判定数：
+  各自会让哪些分片改变结论、一共几条。**两个场景都没有实装**。
 - `python scripts/demo.py` 带停顿重放整套流程，方便录屏；打印的全是真实输出，没有脚本台词。
 
 **盲评已发布两轮，每轮都带填好的表。** 第 1 轮一致率 **0.8507**，Wilson 95%

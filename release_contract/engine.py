@@ -40,6 +40,32 @@ _STRICTNESS: dict[str, int] = {AUTO: 0, FENCE: 1, HOLD: 2}
 # the report text and `release_contract.launch` both read it from here.
 ROLLBACK_CONSECUTIVE_WINDOWS = 2
 
+
+def _require_int(field: str, value: Any) -> None:
+    """Integers must be integers: `True` and 200.0 are not counts.
+
+    Without this, `n: "200"` surfaced as `'<' not supported between instances of
+    'str' and 'int'` — exit 3, but an implementation leak instead of a readable
+    error a caller can act on.
+    """
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise ContractError(
+            "%s must be an integer, got %r" % (field, value)
+        )
+
+
+def _require_number(field: str, value: Any) -> None:
+    """Numbers must be real numbers.
+
+    NaN is the dangerous one: `NaN >= 0` is False, so a range check written as
+    `if value < 0` lets it through, and `NaN > limit` is also False, so a NaN
+    cost silently passes gate G5 and releases the segment. Reject it here.
+    """
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise ContractError("%s must be a number, got %r" % (field, value))
+    if not math.isfinite(float(value)):
+        raise ContractError("%s must be finite, got %r" % (field, value))
+
 # Five per-segment gates plus one global coverage gate.
 SEGMENT_GATES: tuple[str, ...] = (
     "G1_SAMPLE",
@@ -67,11 +93,15 @@ class Guardrails:
     z: float = 1.96
 
     def __post_init__(self) -> None:
+        _require_int("min_sample_size", self.min_sample_size)
+        _require_number("min_success_rate", self.min_success_rate)
+        _require_number("max_cost_per_case", self.max_cost_per_case)
+        _require_number("z", self.z)
         if self.min_sample_size < 1:
             raise ContractError("min_sample_size must be >= 1")
         if not 0.0 <= self.min_success_rate <= 1.0:
             raise ContractError("min_success_rate must be within [0, 1]")
-        if self.max_harm not in HARM_RANK:
+        if not isinstance(self.max_harm, str) or self.max_harm not in HARM_RANK:
             raise ContractError("max_harm must be one of %s" % (tuple(HARM_RANK),))
         if self.max_cost_per_case < 0:
             raise ContractError("max_cost_per_case must be >= 0")
@@ -91,6 +121,13 @@ class Segment:
     human_review_cost: float = 0.0
 
     def __post_init__(self) -> None:
+        if not isinstance(self.id, str):
+            raise ContractError("segment id must be a string, got %r" % (self.id,))
+        _require_number("volume_share", self.volume_share)
+        _require_int("n", self.n)
+        _require_int("successes", self.successes)
+        _require_number("cost_per_case", self.cost_per_case)
+        _require_number("human_review_cost", self.human_review_cost)
         if not self.id:
             raise ContractError("segment id must be non-empty")
         if not 0.0 <= self.volume_share <= 1.0:
@@ -180,6 +217,9 @@ class Decision:
     risks: tuple[str, ...]
     rollbacks: tuple[dict[str, Any], ...]
     coverage_gate: GateHit | None
+    # Echoed so a decision records the thresholds it was made under. Without it,
+    # omitting `guardrails` silently applied defaults nobody could see.
+    guardrails: dict[str, Any]
 
 
 def _check_disabled(disabled: FrozenSet[str]) -> None:
@@ -312,6 +352,11 @@ def _evidence_risks(
         risks.add("uniform_sample_sizes")
     if all(s.cost_per_case == 0 for s in segs):
         risks.add("zero_cost")
+    if gr.min_success_rate == 0.0:
+        # A zero floor makes gate G2 vacuous: every segment passes it, including
+        # one that failed every case. The contract is still honoured (it is the
+        # caller's stated policy), but the decision says so out loud.
+        risks.add("success_floor_is_zero")
     return tuple(sorted(risks))
 
 
@@ -390,6 +435,7 @@ def decide(
         risks=_evidence_risks(contract, decisions),
         rollbacks=_rollback_triggers(contract, decisions),
         coverage_gate=coverage_gate,
+        guardrails=dict(contract.guardrails.__dict__),
     )
 
 
@@ -427,9 +473,23 @@ def contract_from_dict(data: dict[str, Any]) -> Contract:
         except TypeError as exc:
             raise ContractError("segment %d: %s" % (i, exc)) from exc
 
-    return Contract(product=str(data.get("product", "")), segments=tuple(segs), guardrails=gr)
+    product = data.get("product", "")
+    if not isinstance(product, str):
+        raise ContractError("product must be a string, got %r" % (product,))
+    return Contract(product=product, segments=tuple(segs), guardrails=gr)
+
+
+def _reject_json_constant(name: str) -> Any:
+    """`json.loads` accepts NaN/Infinity by default; strict JSON does not.
+
+    Rejecting them at parse time means a contract can never carry a value that
+    compares False against every threshold.
+    """
+    raise ContractError(
+        "%s is not valid JSON here; every number must be finite" % name
+    )
 
 
 def load_contract(path: str | Path) -> Contract:
-    text = Path(path).read_text(encoding="utf-8")
-    return contract_from_dict(json.loads(text))
+    text = Path(path).read_text(encoding="utf-8-sig")
+    return contract_from_dict(json.loads(text, parse_constant=_reject_json_constant))

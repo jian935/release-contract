@@ -180,6 +180,9 @@ Two checks do not depend on author-written golden labels:
   healthy window resets the run, and a segment that never appears in the log is
   reported as `no observations` instead of looking healthy. `--fail-on-trigger`
   exits 2 for a pipeline. Worked example: `examples/launch/`.
+- `python scripts/whatif_rules.py` prices the two open rule questions in
+  `DESIGN.md` against the published blind cases: which segments would change
+  verdict, and how many. It implements neither scenario.
 - `python scripts/demo.py` replays the whole flow with pauses, for a screen
   recording. It prints real output; nothing in it is scripted prose.
 

@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import csv
 import io
+import math
 from typing import Any
 
 REQUIRED = ("id", "n", "successes")
@@ -92,6 +93,13 @@ def build(
                 raise CountsError(
                     "row %d: %s=%r is not a number" % (line_no, key, raw)
                 ) from None
+            if not math.isfinite(value):
+                # "inf" and "nan" parse as floats. NaN would sail through every
+                # threshold comparison and turn a broken row into a released
+                # segment, so it is refused at the edge.
+                raise CountsError(
+                    "row %d: %s=%r must be a finite number" % (line_no, key, raw)
+                )
             if integer:
                 if value != int(value):
                     raise CountsError(

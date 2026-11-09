@@ -126,6 +126,15 @@ they need a deliberate decision and a full re-run, not a quiet edit.
   materially different realised harm than their declared `harm_if_wrong`. Then
   either G3 gains a `fallback_adjusted_harm` input or the docs stop calling the
   ceiling absolute.
+- **Measured cost today:** over the 67 published blind segments, lowering
+  effective harm by one rank for any configured fallback would move **3**
+  segments from `FENCE` to `AUTO` — `dev-008`, `ho-008`, `ho-012`
+  (`python scripts/whatif_rules.py`). Under that one-rank reading, `dev-009` —
+  the second case the same reader disputed — would *still* be fenced, because
+  `critical` minus one rank is above a `medium` ceiling. To reproduce both of
+  that reader's verdicts the rule has to be "a fallback removes the ceiling
+  entirely", which is a much stronger claim and would need a harm model, not a
+  rank shift.
 
 ### 2. When evidence is thin *and* a hard ceiling is violated, `HOLD` or `FENCE`?
 
@@ -142,6 +151,11 @@ they need a deliberate decision and a full re-run, not a quiet edit.
   50 golden cases would need re-deriving, and both published rounds would need
   re-scoring — at which point the published numbers change and the changelog has
   to say so.
+- **Measured cost today:** over the 67 published blind segments, letting a hard
+  violation outrank `G1` would move exactly **2** segments from `HOLD` to
+  `FENCE` — `dev-020` and `ho-020`, which are precisely the two the reader
+  disputed (`python scripts/whatif_rules.py`). Unlike the harm-ceiling question,
+  this one is cheap in verdicts; it is expensive only in published numbers.
 
 Neither question justifies changing the engine on the strength of one reader.
 The second one does justify a documentation fix, which is in place: `HOLD` is
