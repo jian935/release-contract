@@ -5,7 +5,17 @@ not measured is marked as such.
 
 ## Unreleased
 
-- The README animation is now `assets/demo.gif`, rendered from real stdout by
+- Added `assets/demo-recording.gif`: a real screen capture of one run (26 s,
+  800px, console window only) with `assets/demo-recording.json` holding its
+  SHA-256, the host and exactly what was scaled. A new self-check fails when the
+  sidecar and the file disagree, because a capture cannot be regenerated.
+- `scripts/demo.py` now invokes `sys.executable` instead of `python`. A Windows
+  launcher stub could shadow `python`, exit 0 and print nothing, which produced
+  a recording of four commands with no output. It also prints a warning when a
+  step succeeds while printing nothing, so that failure can no longer be silent.
+- The last demo step reports its real exit code instead of printing the report a
+  second time; the duplicated report pushed the verdict table out of view.
+- The README animation is `assets/demo.gif`, rendered from real stdout by
   `scripts/render_demo_gif.py`. A SHA-256 sidecar lets the self-check fail when
   the engine changes without re-rendering — it is a rendering, not a screen
   capture, and it says so in both the README and the sidecar.

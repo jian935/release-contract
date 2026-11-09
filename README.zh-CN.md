@@ -2,9 +2,15 @@
 
 判定 AI 产品的离线证据，够不够支撑「哪些流量分片可以自动化放行」——确定性、每道闸都可见。
 
+![release-contract 在真实控制台里跑完四步流程](assets/demo-recording.gif)
+
+_这是 Windows 11 上一次真实运行的屏幕录制，只截了控制台窗口，没有摆拍。
+`assets/demo-recording.json` 记录了 SHA-256 以及具体裁剪/缩放做了什么。_
+
 ![release-contract 判定一份合成演示合约](assets/demo.gif)
 
-_此动画由真实命令输出渲染而成，不是屏幕录制。_
+_第二张是从实时命令输出重新渲染的，不是录制——这样才能让自检在「引擎改了、
+图没更新」时直接报错。_
 
 版本：0.2.0 · MIT · [English](README.md)
 

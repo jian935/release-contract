@@ -21,20 +21,40 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 WORK = ROOT / ".local" / "demo"
 
+# Steps are written with `{py}` and expanded to `sys.executable`. Never put a
+# bare `python` here: on Windows a launcher stub can shadow it, exit 0 and
+# print nothing, which makes a recording look like the tool did nothing.
 STEPS = (
-    ("python -m release_contract.cli --version", None),
     (
-        "python -m release_contract.cli import examples/counts.example.csv "
+        "{py} -m release_contract.cli import examples/counts.example.csv "
         "--product \"SYNTHETIC demo: checkout-assistant v7\" -o .local/demo/contract.json",
         None,
+        True,
     ),
-    ("python -m release_contract.cli validate .local/demo/contract.json", None),
-    ("python -m release_contract.cli decide .local/demo/contract.json", None),
+    ("{py} -m release_contract.cli validate .local/demo/contract.json", None, True),
+    ("{py} -m release_contract.cli decide .local/demo/contract.json", None, True),
+    # The report is identical to the previous step, so printing it twice would
+    # scroll the verdict table out of view. Report the real exit code instead.
     (
-        "python -m release_contract.cli decide .local/demo/contract.json --fail-on FENCE",
-        "exit code 2 = a gate the caller opted into was hit",
+        "{py} -m release_contract.cli decide .local/demo/contract.json --fail-on FENCE",
+        "a gate the caller opted into was hit",
+        False,
     ),
 )
+
+
+def expand(template: str) -> str:
+    """Fill `{py}` with the running interpreter, quoted for a shell."""
+    return template.replace("{py}", '"%s"' % sys.executable)
+
+
+def for_display(command: str) -> str:
+    """Shorten only the interpreter path, so a long line still fits a screen.
+
+    The executed command keeps the absolute path; this is a display alias, not
+    a different invocation.
+    """
+    return command.replace('"%s"' % sys.executable, "python")
 
 
 def main() -> int:
@@ -52,9 +72,10 @@ def main() -> int:
     # stderr jumping the queue.
     sys.stdout.reconfigure(line_buffering=True)
     sys.stderr.reconfigure(line_buffering=True)
-    for command, note in STEPS:
+    for template, note, show_output in STEPS:
+        command = expand(template)
         if not args.quiet:
-            print("\n$ " + command)
+            print("\n$ " + for_display(command))
             sys.stdout.flush()
         proc = subprocess.run(
             command,
@@ -64,10 +85,19 @@ def main() -> int:
             encoding="utf-8",
             errors="replace",
         )
-        sys.stdout.write(proc.stdout or "")
-        if proc.stderr.strip():
-            sys.stdout.write(proc.stderr)
-        if note:
+        output = (proc.stdout or "") + (proc.stderr or "")
+        if show_output:
+            sys.stdout.write(output)
+            # A step that "succeeds" while printing nothing means the interpreter
+            # never ran. Say so loudly instead of recording a blank screen.
+            if not output.strip() and proc.returncode == 0:
+                sys.stdout.write(
+                    "# WARNING: this step printed nothing. The interpreter probably "
+                    "did not run (a launcher stub can exit 0 silently).\n"
+                )
+        else:
+            print("# exit code %d: %s" % (proc.returncode, note or "done"))
+        if note and show_output:
             print("# %s" % note)
         sys.stdout.flush()
         if args.pace > 0:

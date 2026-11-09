@@ -1,0 +1,13 @@
+{
+  "bytes": 2723468,
+  "command": "demo-record.bat --pace 3.0  (runs scripts/demo.py, real CLI output only)",
+  "duration_seconds": 26,
+  "frames": 56,
+  "host": "Windows 11, 1920x1080, Windows Terminal",
+  "kind": "real screen capture",
+  "not_a_rendering": true,
+  "post_processing": "de-duplicated identical frames, scaled to 800px wide, 32-colour palette; no content added, removed or reordered",
+  "recorded_at": "2026-11-09",
+  "sha256": "0eac32c90737dd1df829334596ac4751e098a4a3491d689daef597e7831e28d5",
+  "window": "the console window only, cropped to its own rect"
+}

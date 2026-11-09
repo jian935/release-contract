@@ -3,9 +3,16 @@
 Decide which traffic segments of an AI product the offline evidence is strong
 enough to release to — deterministically, with every gate visible.
 
+![release-contract running the four-step flow in a real console](assets/demo-recording.gif)
+
+_A real screen capture of one run on Windows 11 — console window only, nothing
+staged. `assets/demo-recording.json` records the SHA-256 and exactly what was
+cropped or scaled._
+
 ![release-contract deciding a synthetic demo contract](assets/demo.gif)
 
-_Rendered from the real command output — not a screen recording._
+_This second one is re-rendered from live command output instead of captured, so
+the self-check can fail when the engine changes without it._
 
 Version: 0.2.0 · MIT · [中文说明](README.zh-CN.md)
 

@@ -531,6 +531,34 @@ def run_checks() -> list[Check]:
         )
     )
 
+    # 20. The screen capture must carry a sidecar that matches the file on disk.
+    #     A capture cannot be regenerated, so the sidecar is the only thing that
+    #     ties the shipped GIF to the run that produced it.
+    rec_gif = ROOT / "assets" / "demo-recording.gif"
+    rec_meta_path = ROOT / "assets" / "demo-recording.json"
+    rec_detail = "assets/demo-recording.gif missing"
+    rec_ok = False
+    if rec_gif.exists() and rec_meta_path.exists():
+        try:
+            meta = json.loads(rec_meta_path.read_text(encoding="utf-8"))
+            actual = hashlib.sha256(rec_gif.read_bytes()).hexdigest()
+            rec_ok = (
+                meta.get("sha256") == actual
+                and meta.get("bytes") == rec_gif.stat().st_size
+                and meta.get("kind") == "real screen capture"
+                and meta.get("not_a_rendering") is True
+            )
+            rec_detail = "hash %s" % ("matches" if meta.get("sha256") == actual else "DRIFTED")
+        except (json.JSONDecodeError, OSError) as exc:
+            rec_detail = "unreadable sidecar: %s" % exc
+    checks.append(
+        _check(
+            "screen_recording_sidecar_matches",
+            rec_ok,
+            rec_detail,
+        )
+    )
+
     return checks
 
 
