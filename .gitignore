@@ -15,3 +15,6 @@ build/
 dist/
 *.zip
 .DS_Store
+
+# Local double-click helper for recording (not part of the skill)
+demo-record.bat
